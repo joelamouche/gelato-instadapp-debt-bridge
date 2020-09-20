@@ -7,9 +7,11 @@ const GelatoCoreLib = require("@gelatonetwork/core");
 // Process Env Variables
 require("dotenv").config();
 const INFURA_ID = process.env.INFURA_ID;
+const INFURA_PRIVATE_KEY = process.env.INFURA_PRIVATE_KEY;
 assert.ok(INFURA_ID, "no Infura ID in process.env");
 
-const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56";
+//const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56"; 
+const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
 
 // ================================= CONFIG =========================================
 module.exports = {
@@ -18,7 +20,7 @@ module.exports = {
     ganache: {
       // Standard config
       url: "http://localhost:8545",
-      fork: `https://mainnet.infura.io/v3/${INFURA_ID}`,
+      fork: `https://:${INFURA_PRIVATE_KEY}@mainnet.infura.io/v3/${INFURA_ID}`,
       unlocked_accounts: [INSTA_MASTER],
       // Custom
       GelatoCore: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8",

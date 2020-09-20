@@ -7,7 +7,8 @@ const GelatoCoreLib = require("@gelatonetwork/core");
 const { sleep } = GelatoCoreLib;
 
 // Constants
-const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56";
+//const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56";
+const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
 const ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
 // Contracts
@@ -51,6 +52,7 @@ describe("DSA setup with Gelato Tests", function () {
     // Get Test Wallet for local testnet
     [userWallet] = await ethers.getSigners();
     userAddress = await userWallet.getAddress();
+    
     instaMaster = await ethers.provider.getSigner(INSTA_MASTER);
 
     // ===== DSA LOCAL SETUP ==================
@@ -198,7 +200,7 @@ describe("DSA setup with Gelato Tests", function () {
   it("#5: Allows unlocked InstaDapp master to enable Gelato connector", async function () {
     expect(await instaConnectors.isConnector([connectGelato.address])).to.be
       .false;
-
+      
     // Send some ETH to the InstaMaster multi_sig
     await userWallet.sendTransaction({
       to: INSTA_MASTER,

@@ -7,7 +7,8 @@ const GelatoCoreLib = require("@gelatonetwork/core");
 const { sleep } = GelatoCoreLib;
 
 // Constants
-const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56";
+//const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56"; 
+const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
 const DAI_100 = ethers.utils.parseUnits("100", 18);
 const APY_2_PERCENT_IN_SECONDS = ethers.BigNumber.from(
   "1000000000627937192491029810"
