@@ -7,8 +7,6 @@ const GelatoCoreLib = require("@gelatonetwork/core");
 const { sleep } = GelatoCoreLib;
 
 // Constants
-//const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56";
-//const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
 const ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
 // Contracts
@@ -54,8 +52,6 @@ describe("DSA setup with Gelato Tests", function () {
     // Get Test Wallet for local testnet
     [userWallet] = await ethers.getSigners();
     userAddress = await userWallet.getAddress();
-    
-    // instaMaster = await ethers.provider.getSigner(INSTA_MASTER);
 
     // ===== DSA LOCAL SETUP ==================
     instaIndex = await ethers.getContractAt(
@@ -96,14 +92,7 @@ describe("DSA setup with Gelato Tests", function () {
       bre.network.config.GelatoCore
     );
 
-    // Deploy ConnectGelato to local testnet
-    // first query the correct connectorID
-    const connectorLength = await instaConnectors.connectorLength();
-    const connectorId = connectorLength.add(1);
-
-    // const ConnectGelato = await ethers.getContractFactory("ConnectGelato");
-    // connectGelato = await ConnectGelato.deploy(connectorId, gelatoCore.address);
-    // await connectGelato.deployed();
+    // Instantiate ConnectGelato from mainnet
     connectGelato = await ethers.getContractAt(
       ConnectGelato.abi,
       bre.network.config.ConnectGelato
@@ -203,28 +192,7 @@ describe("DSA setup with Gelato Tests", function () {
     expect(await dsa.isAuth(gelatoCore.address)).to.be.true;
   });
 
-  // it("#5: Allows unlocked InstaDapp master to enable Gelato connector", async function () {
-  //   expect(await instaConnectors.isConnector([connectGelato.address])).to.be
-  //     .false;
-      
-  //   // Send some ETH to the InstaMaster multi_sig
-  //   await userWallet.sendTransaction({
-  //     to: INSTA_MASTER,
-  //     value: ethers.utils.parseEther("0.1"),
-  //   });
-
-  //   // Enable ConnectGelato on InstaConnectors via InstaMaster multisig
-  //   await expect(
-  //     instaConnectors.connect(instaMaster).enable(connectGelato.address)
-  //   )
-  //     .to.emit(instaConnectors, "LogEnable")
-  //     .withArgs(connectGelato.address);
-
-  //   expect(await instaConnectors.isConnector([connectGelato.address])).to.be
-  //     .true;
-  // });
-
-  it("#6: Gelato ProviderModuleDSA returns correct execPayload", async function () {
+  it("#5: Gelato ProviderModuleDSA returns correct execPayload", async function () {
     // Deposit 1 ETH into DSA
     await userWallet.sendTransaction({
       to: dsaAddress,

@@ -7,8 +7,6 @@ const GelatoCoreLib = require("@gelatonetwork/core");
 const { sleep } = GelatoCoreLib;
 
 // Constants
-//const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56"; 
-// const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
 const DAI_100 = ethers.utils.parseUnits("100", 18);
 const APY_2_PERCENT_IN_SECONDS = ethers.BigNumber.from(
   "1000000000627937192491029810"
@@ -56,7 +54,6 @@ describe("Move DAI lending from DSR to Compound", function () {
     // Get Test Wallet for local testnet
     [userWallet] = await ethers.getSigners();
     userAddress = await userWallet.getAddress();
-    // const instaMaster = await ethers.provider.getSigner(INSTA_MASTER);
 
     // Ganache default accounts prefilled with 100 ETH
     expect(await userWallet.getBalance()).to.be.gt(
@@ -117,30 +114,11 @@ describe("Move DAI lending from DSR to Compound", function () {
     );
     expect(await dsa.isAuth(gelatoCore.address)).to.be.true;
 
-    // Deploy ConnectGelato to local testnet
-    // first query the correct connectorID
-    // const connectorLength = await instaConnectors.connectorLength();
-    // const connectorId = connectorLength.add(1);
-
-    // const ConnectGelato = await ethers.getContractFactory("ConnectGelato");
-    // connectGelato = await ConnectGelato.deploy(connectorId, gelatoCore.address);
-    // await connectGelato.deployed();
+    // nstantiate ConnectGelato from mainnet
     connectGelato = await ethers.getContractAt(
       ConnectGelato.abi,
       bre.network.config.ConnectGelato
     );
-
-
-    // Enable ConnectGelato on InstaConnectors via InstaMaster multisig
-    // Send some ETH to the InstaMaster multi_sig
-    // await userWallet.sendTransaction({
-    //   to: INSTA_MASTER,
-    //   value: ethers.utils.parseEther("0.1"),
-    // });
-    // await instaConnectors.connect(instaMaster).enable(connectGelato.address);
-    // expect(
-    //   await instaConnectors.isConnector([connectGelato.address])
-    // ).to.be.true;
 
     // Deploy ProviderModuleDSA to local testnet
     const ProviderModuleDSA = await ethers.getContractFactory(
