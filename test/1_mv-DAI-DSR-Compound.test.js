@@ -7,7 +7,6 @@ const GelatoCoreLib = require("@gelatonetwork/core");
 const { sleep } = GelatoCoreLib;
 
 // Constants
-const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56";
 const DAI_100 = ethers.utils.parseUnits("100", 18);
 const APY_2_PERCENT_IN_SECONDS = ethers.BigNumber.from(
   "1000000000627937192491029810"
@@ -15,7 +14,6 @@ const APY_2_PERCENT_IN_SECONDS = ethers.BigNumber.from(
 
 // Contracts
 const InstaIndex = require("../pre-compiles/InstaIndex.json");
-const InstaConnectors = require("../pre-compiles/InstaConnectors.json");
 const InstaList = require("../pre-compiles/InstaList.json");
 const InstaAccount = require("../pre-compiles/InstaAccount.json");
 const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
@@ -23,6 +21,8 @@ const ConnectMaker = require("../pre-compiles/ConnectMaker.json");
 const ConnectCompound = require("../pre-compiles/ConnectCompound.json");
 const IERC20 = require("../pre-compiles/IERC20.json");
 const IUniswapExchange = require("../pre-compiles/IUniswapExchange.json");
+
+const ConnectGelato =require("../artifacts/ConnectGelato")
 
 describe("Move DAI lending from DSR to Compound", function () {
   this.timeout(0);
@@ -41,19 +41,18 @@ describe("Move DAI lending from DSR to Compound", function () {
   let connectCompound;
   let gelatoCore;
   let dai;
+  let connectGelato;
 
   // Contracts to deploy and use for local testing
   let dsa;
   let mockDSR;
   let mockCDAI;
   let conditionCompareUints;
-  let connectGelato;
 
   before(async function () {
     // Get Test Wallet for local testnet
     [userWallet] = await ethers.getSigners();
     userAddress = await userWallet.getAddress();
-    const instaMaster = await ethers.provider.getSigner(INSTA_MASTER);
 
     // Ganache default accounts prefilled with 100 ETH
     expect(await userWallet.getBalance()).to.be.gt(
@@ -68,10 +67,6 @@ describe("Move DAI lending from DSR to Compound", function () {
     const instaList = await ethers.getContractAt(
       InstaList.abi,
       bre.network.config.InstaList
-    );
-    const instaConnectors = await ethers.getContractAt(
-      InstaConnectors.abi,
-      bre.network.config.InstaConnectors
     );
     connectMaker = await ethers.getContractAt(
       ConnectMaker.abi,
@@ -114,25 +109,11 @@ describe("Move DAI lending from DSR to Compound", function () {
     );
     expect(await dsa.isAuth(gelatoCore.address)).to.be.true;
 
-    // Deploy ConnectGelato to local testnet
-    // first query the correct connectorID
-    const connectorLength = await instaConnectors.connectorLength();
-    const connectorId = connectorLength.add(1);
-
-    const ConnectGelato = await ethers.getContractFactory("ConnectGelato");
-    connectGelato = await ConnectGelato.deploy(connectorId, gelatoCore.address);
-    await connectGelato.deployed();
-
-    // Enable ConnectGelato on InstaConnectors via InstaMaster multisig
-    // Send some ETH to the InstaMaster multi_sig
-    await userWallet.sendTransaction({
-      to: INSTA_MASTER,
-      value: ethers.utils.parseEther("0.1"),
-    });
-    await instaConnectors.connect(instaMaster).enable(connectGelato.address);
-    expect(
-      await instaConnectors.isConnector([connectGelato.address])
-    ).to.be.true;
+    // nstantiate ConnectGelato from mainnet
+    connectGelato = await ethers.getContractAt(
+      ConnectGelato.abi,
+      bre.network.config.ConnectGelato
+    );
 
     // Deploy ProviderModuleDSA to local testnet
     const ProviderModuleDSA = await ethers.getContractFactory(
@@ -165,7 +146,8 @@ describe("Move DAI lending from DSR to Compound", function () {
     dai = await ethers.getContractAt(IERC20.abi, bre.network.config.DAI);
     expect(await dai.balanceOf(userAddress)).to.be.equal(0);
 
-    // Let's get the test user 100 DAI++ from Kyber
+    // Let's get the test user 100 DAI++ from Uniswap
+    // TODO use instadapp conector for this
     const daiUniswapExchange = await ethers.getContractAt(
       IUniswapExchange.abi,
       bre.network.config.DAI_UNISWAP
@@ -299,6 +281,7 @@ describe("Move DAI lending from DSR to Compound", function () {
       GAS_LIMIT,
       GAS_PRICE_CEIL
     );
+    
     await dsa.cast(
       [connectGelato.address], // targets
       [
@@ -310,6 +293,8 @@ describe("Move DAI lending from DSR to Compound", function () {
             [],
             [providerModuleDSA.address],
             TASK_AUTOMATION_FUNDS,
+            0,
+            0
           ],
         }),
       ], // datas
@@ -319,6 +304,7 @@ describe("Move DAI lending from DSR to Compound", function () {
         gasLimit: 5000000,
       }
     );
+    
     expect(await gelatoCore.providerFunds(dsa.address)).to.be.gte(
       TASK_AUTOMATION_FUNDS
     );

@@ -20,7 +20,7 @@ Furtheremore the following contracts were added to showcase the automation of th
 
 - `ProviderModuleDSA`: this is needed for any Gelato integration. It tells Gelato how the execution payload should be formatted. In this prototype, it formats the payload for the `DSA.cast` function.
 
-- `ConnectGelato`: this is a Connector needed for the DSA to be able to submit Tasks to Gelato. In the test suite we unlock the DSA MultiSig Master account at 0xfCD22438AD6eD564a1C26151Df73F6B33B817B56, in order to be able to enable this Connector in our mainnet fork running on the local ganache instance.
+- `ConnectGelato`: (deprecated, now whitelisted by instaDapp and deployed on the mainnet) this is a Connector needed for the DSA to be able to submit Tasks to Gelato. In the test suite we unlock the DSA MultiSig Master account at 0xfCD22438AD6eD564a1C26151Df73F6B33B817B56, in order to be able to enable this Connector in our mainnet fork running on the local ganache instance.
 
 To see for yourself check out the [contracts](./contracts) folder and make sure to check out `test/mv-DAI-DSR-Compound.test.js`, to see an end-to-end test showcasing the prototype. To do so follow the steps below:
 
@@ -28,3 +28,7 @@ To see for yourself check out the [contracts](./contracts) folder and make sure 
 2. Put your Infura ID in .env
 3. yarn install
 4. npx buidler test
+
+# Debt Bridge
+
+https://docs.instadapp.io/usecases/debt-bridge/

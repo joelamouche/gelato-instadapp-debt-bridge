@@ -1,9 +1,9 @@
 {
-  "name": "gelato-instadapp",
+  "name": "gelato-instadapp-debt-bridge",
   "version": "1.0.0",
-  "description": "The smart contract and tests for gelato-instadapp prototypes",
-  "repository": "https://github.com/gelatodigital/gelato-instadapp",
-  "author": "gitpusha",
+  "description": "The smart contract and tests for gelato-instadapp debt bridge",
+  "repository": "https://github.com/joelamouche/gelato-instadapp-debt-bridge/",
+  "author": "Antoine Estienne",
   "private": false,
   "scripts": {},
   "devDependencies": {

@@ -7,9 +7,11 @@ const GelatoCoreLib = require("@gelatonetwork/core");
 // Process Env Variables
 require("dotenv").config();
 const INFURA_ID = process.env.INFURA_ID;
+const INFURA_PRIVATE_KEY = process.env.INFURA_PRIVATE_KEY;
 assert.ok(INFURA_ID, "no Infura ID in process.env");
 
-const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56";
+//const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56"; 
+const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
 
 // ================================= CONFIG =========================================
 module.exports = {
@@ -18,8 +20,8 @@ module.exports = {
     ganache: {
       // Standard config
       url: "http://localhost:8545",
-      fork: `https://mainnet.infura.io/v3/${INFURA_ID}`,
-      unlocked_accounts: [INSTA_MASTER],
+      fork: `https://:${INFURA_PRIVATE_KEY}@mainnet.infura.io/v3/${INFURA_ID}`,
+      // unlocked_accounts: [INSTA_MASTER],
       // Custom
       GelatoCore: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8",
       InstaMaster: INSTA_MASTER,
@@ -34,6 +36,7 @@ module.exports = {
       DAI: "0x6b175474e89094c44da98b954eedeac495271d0f",
       DAI_UNISWAP: "0x2a1530C4C41db0B0b2bB646CB5Eb1A67b7158667",
       CDAI: "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
+      ConnectGelato: "0x37A7009d424951dd5D5F155fA588D9a03C455163",
     },
   },
   solc: {
