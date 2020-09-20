@@ -28,3 +28,7 @@ To see for yourself check out the [contracts](./contracts) folder and make sure 
 2. Put your Infura ID in .env
 3. yarn install
 4. npx buidler test
+
+# Debt Bridge
+
+https://docs.instadapp.io/usecases/debt-bridge/

@@ -14,7 +14,6 @@ const APY_2_PERCENT_IN_SECONDS = ethers.BigNumber.from(
 
 // Contracts
 const InstaIndex = require("../pre-compiles/InstaIndex.json");
-const InstaConnectors = require("../pre-compiles/InstaConnectors.json");
 const InstaList = require("../pre-compiles/InstaList.json");
 const InstaAccount = require("../pre-compiles/InstaAccount.json");
 const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
@@ -42,13 +41,13 @@ describe("Move DAI lending from DSR to Compound", function () {
   let connectCompound;
   let gelatoCore;
   let dai;
+  let connectGelato;
 
   // Contracts to deploy and use for local testing
   let dsa;
   let mockDSR;
   let mockCDAI;
   let conditionCompareUints;
-  let connectGelato;
 
   before(async function () {
     // Get Test Wallet for local testnet
@@ -68,10 +67,6 @@ describe("Move DAI lending from DSR to Compound", function () {
     const instaList = await ethers.getContractAt(
       InstaList.abi,
       bre.network.config.InstaList
-    );
-    const instaConnectors = await ethers.getContractAt(
-      InstaConnectors.abi,
-      bre.network.config.InstaConnectors
     );
     connectMaker = await ethers.getContractAt(
       ConnectMaker.abi,
