@@ -123,6 +123,8 @@ describe("DSA setup with Gelato Tests", function () {
       .be.true;
     expect(await instaConnectors.connectors(bre.network.config.ConnectCompound))
       .to.be.true;
+    expect(await instaConnectors.connectors(bre.network.config.ConnectGelato))
+        .to.be.true;
   });
 
   it("#2: Deploys a DSA with user as authority", async function () {
