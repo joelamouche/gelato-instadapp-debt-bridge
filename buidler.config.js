@@ -10,9 +10,6 @@ const INFURA_ID = process.env.INFURA_ID;
 const INFURA_PRIVATE_KEY = process.env.INFURA_PRIVATE_KEY;
 assert.ok(INFURA_ID, "no Infura ID in process.env");
 
-//const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56"; 
-const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
-
 // ================================= CONFIG =========================================
 module.exports = {
   defaultNetwork: "ganache",
@@ -21,10 +18,8 @@ module.exports = {
       // Standard config
       url: "http://localhost:8545",
       fork: `https://:${INFURA_PRIVATE_KEY}@mainnet.infura.io/v3/${INFURA_ID}`,
-      // unlocked_accounts: [INSTA_MASTER],
       // Custom
       GelatoCore: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8",
-      InstaMaster: INSTA_MASTER,
       InstaIndex: "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723",
       InstaList: "0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb",
       InstaConnectors: "0xD6A602C01a023B98Ecfb29Df02FBA380d3B21E0c",
@@ -51,14 +46,14 @@ usePlugin("@nomiclabs/buidler-ganache");
 usePlugin("@nomiclabs/buidler-waffle");
 
 // ================================= TASKS =========================================
-task("abi-encode-withselector")
+task("abi-encode-with-selector")
   .addPositionalParam(
     "abi",
     "Contract ABI in array form",
     undefined,
     types.json
   )
-  .addPositionalParam("functionname")
+  .addPositionalParam("functionName")
   .addOptionalVariadicPositionalParam(
     "inputs",
     "Array of function params",
@@ -71,16 +66,16 @@ task("abi-encode-withselector")
       if (taskArgs.log) console.log(taskArgs);
 
       if (!taskArgs.abi)
-        throw new Error("abi-encode-withselector: no abi passed");
+        throw new Error("abi-encode-with-selector: no abi passed");
 
       const interFace = new utils.Interface(taskArgs.abi);
 
       let functionFragment;
       try {
-        functionFragment = interFace.getFunction(taskArgs.functionname);
+        functionFragment = interFace.getFunction(taskArgs.functionName);
       } catch (error) {
         throw new Error(
-          `\n ❌ abi-encode-withselector: functionname "${taskArgs.functionname}" not found`
+          `\n ❌ abi-encode-with-selector: functionName "${taskArgs.functionName}" not found`
         );
       }
 

@@ -152,9 +152,9 @@ describe("DSA setup with Gelato Tests", function () {
     );
 
     // Encode Payloads for ConnectBasic.withdraw
-    const withdrawData = await bre.run("abi-encode-withselector", {
+    const withdrawData = await bre.run("abi-encode-with-selector", {
       abi: ConnectBasic.abi,
-      functionname: "withdraw",
+      functionName: "withdraw",
       inputs: [ETH, ethers.utils.parseEther("1"), userAddress, 0, 0],
     });
 
@@ -177,9 +177,9 @@ describe("DSA setup with Gelato Tests", function () {
     expect(await dsa.isAuth(gelatoCore.address)).to.be.false;
 
     // Encode Payloads for ConnectAuth.addModule
-    const addAuthData = await bre.run("abi-encode-withselector", {
+    const addAuthData = await bre.run("abi-encode-with-selector", {
       abi: ConnectAuth.abi,
-      functionname: "add",
+      functionName: "add",
       inputs: [gelatoCore.address],
     });
 
@@ -210,9 +210,9 @@ describe("DSA setup with Gelato Tests", function () {
       actions: [
         new GelatoCoreLib.Action({
           addr: bre.network.config.ConnectBasic,
-          data: await bre.run("abi-encode-withselector", {
+          data: await bre.run("abi-encode-with-selector", {
             abi: ConnectBasic.abi,
-            functionname: "withdraw",
+            functionName: "withdraw",
             inputs: [
               ETH,
               ethers.utils.parseEther("1"),
@@ -227,9 +227,9 @@ describe("DSA setup with Gelato Tests", function () {
     });
 
     // otherWallet needs to be an authority to qualify as withdraw to address.
-    const addAuthData = await bre.run("abi-encode-withselector", {
+    const addAuthData = await bre.run("abi-encode-with-selector", {
       abi: ConnectAuth.abi,
-      functionname: "add",
+      functionName: "add",
       inputs: [await otherWallet.getAddress()],
     });
     await dsa.cast(
