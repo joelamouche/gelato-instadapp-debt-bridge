@@ -408,7 +408,7 @@ describe("Move DAI lending from DSR to Compound", function () {
     // For testing we now simulate automatic Task Execution ❗
     await expect(
       gelatoCore.exec(taskReceipt, {
-        gasPrice: gelatoGasPrice, // Exectutor must use gelatoGasPrice (Chainlink fast gwei)
+        gasPrice: gelatoGasPrice, // Executor must use gelatoGasPrice (Chainlink fast gwei)
         gasLimit: taskRebalanceDSRToCDAIifBetter.selfProviderGasLimit,
       })
     ).to.emit(gelatoCore, "LogExecSuccess");

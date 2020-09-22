@@ -32,6 +32,7 @@ module.exports = {
       DAI_UNISWAP: "0x2a1530C4C41db0B0b2bB646CB5Eb1A67b7158667",
       CDAI: "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
       ConnectGelato: "0x37A7009d424951dd5D5F155fA588D9a03C455163",
+      ConnectInstaPool: "0x6d11A71575C34eB7b5E22949fAfCd49A2FA2A8F9",
     },
   },
   solc: {
