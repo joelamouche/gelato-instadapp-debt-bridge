@@ -163,7 +163,6 @@ describe("Move DAI Debt from Maker to Compound", function () {
     // First transfer 20 eth to the DSA
     const gasLimit = ethers.BigNumber.from(1000000);
     const gasPrice = ethers.utils.parseUnits("20", "gwei");
-    const gasCostMax = gasLimit.mul(gasPrice);
 
     const initialWalletBalance = await userWallet.getBalance();
     expect(await ethers.provider.getBalance(dsaAddress)).to.be.equal(0);
