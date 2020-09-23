@@ -8,6 +8,7 @@ const { BigNumber } = require("ethers");
 const DSA = require('dsa-sdk');
 const Web3 = require('web3')
 const { sleep } = GelatoCoreLib;
+export {}
 
 // Set up dsa sdk from instaDapp to get resolvers
 const web3=new Web3('http://localhost:8545')
@@ -56,6 +57,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
   let mockDSR;
   let mockCDAI;
   let conditionCompareUints;
+  let providerModuleDSA;
 
   before(async function () {
     // Get Test Wallet for local testnet
@@ -68,6 +70,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
     );
 
     // ===== DSA SETUP ==================
+    //@-ts-ignore
     const instaIndex = await ethers.getContractAt(
       InstaIndex.abi,
       bre.network.config.InstaIndex
@@ -260,7 +263,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
 
     // ======= Action/Spells setup ======
     // To assimilate to DSA SDK
-    const spells = [];
+    const spells: any[] = [];
 
     let borrowAmount = dsaSdk.tokens.fromDecimal(200000, "dai");
     // Borrow DAI from InstaPool

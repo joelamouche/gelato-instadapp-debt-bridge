@@ -1,10 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es5",
     "module": "commonjs",
     "lib": [
-      "es2017",
-      "dom",
       "esnext"
     ],
     "experimentalDecorators": true,
@@ -24,15 +22,18 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
-    "isolatedModules": true,
+    //"isolatedModules": true,
     "noEmit": true,
     "jsx": "react"
   },
+  // files:[
+  //   "node_modules/@nomadiclabs/buidler-ethrs/src/type-extensions.d.ts"
+  // ],
   "include": [
     "lib",
-    "test/**/*"
+    "test"
   ],
   "exclude": [
     "node_modules"
-  ]
+  ],
 }
