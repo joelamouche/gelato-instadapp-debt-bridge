@@ -1,18 +1,27 @@
 // running `npx buidler test` automatically makes use of buidler-waffle plugin
-// => only dependency we need is "chai"
-import { expect } from "chai";
-import bre from "@nomiclabs/buidler";
-const GelatoCoreLib = require("@gelatonetwork/core");
-const { sleep } = GelatoCoreLib;
 
-declare var ethers;
+import { createDSA } from "../lib/createDSA";
+
+// => only dependency we need is "chai"
+const { expect } = require("chai");
+const bre = require("@nomiclabs/buidler");
+const { ethers } = bre;
+const GelatoCoreLib = require("@gelatonetwork/core");
+const { BigNumber } = require("ethers");
+const DSA = require("dsa-sdk");
+const Web3 = require("web3");
+const { sleep } = GelatoCoreLib;
+export {};
+
+// Set up dsa sdk from instaDapp to get resolvers
+const web3 = new Web3("http://localhost:8545");
+const dsaSdk = new DSA(web3);
 
 // Constants
-const DAI_100 = ethers.utils.parseUnits("100", 18);
-const APY_2_PERCENT_IN_SECONDS = ethers.BigNumber.from(
-  "1000000000627937192491029810"
-);
-export {};
+const ETH_Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+const ETH_10 = ethers.utils.parseEther("10");
+const DAI_150 = ethers.utils.parseUnits("150", 18);
+const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 
 // Contracts
 const InstaIndex = require("../pre-compiles/InstaIndex.json");
@@ -20,20 +29,19 @@ const InstaList = require("../pre-compiles/InstaList.json");
 const InstaAccount = require("../pre-compiles/InstaAccount.json");
 const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
 const ConnectMaker = require("../pre-compiles/ConnectMaker.json");
+const ConnectInstaPool = require("../pre-compiles/ConnectInstaPool.json");
 const ConnectCompound = require("../pre-compiles/ConnectCompound.json");
 const IERC20 = require("../pre-compiles/IERC20.json");
-const IUniswapExchange = require("../pre-compiles/IUniswapExchange.json");
 const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.json");
 
 const ConnectGelato_ABI = require("../pre-compiles/ConnectGelato_ABI");
 
-describe("Move DAI lending from DSR to Compound", function () {
+describe("Move DAI Debt from Maker to Compound", function () {
   this.timeout(0);
   if (bre.network.name !== "ganache") {
     console.error("Test Suite is meant to be run on ganache only");
     process.exit(1);
   }
-
   // Wallet to use for local testing
   let userWallet;
   let userAddress;
@@ -58,62 +66,43 @@ describe("Move DAI lending from DSR to Compound", function () {
     [userWallet] = await ethers.getSigners();
     userAddress = await userWallet.getAddress();
 
-    // Ganache default accounts prefilled with 100 ETH
-    expect(await userWallet.getBalance()).to.be.gt(
-      ethers.utils.parseEther("10")
-    );
+    // Ganache default accounts prefilled with at least 10eth (100 ETH)
+    expect(await userWallet.getBalance()).to.be.gt(ETH_10);
 
     // ===== DSA SETUP ==================
     const instaIndex = await ethers.getContractAt(
       InstaIndex.abi,
-      // @ts-ignore
       bre.network.config.InstaIndex
     );
     const instaList = await ethers.getContractAt(
       InstaList.abi,
-      // @ts-ignore
       bre.network.config.InstaList
     );
     connectMaker = await ethers.getContractAt(
       ConnectMaker.abi,
-      // @ts-ignore
       bre.network.config.ConnectMaker
     );
     connectCompound = await ethers.getContractAt(
       ConnectCompound.abi,
-      // @ts-ignore
       bre.network.config.ConnectCompound
     );
-
-    // Deploy DSA and get and verify ID of newly deployed DSA
-    const dsaIDPrevious = await instaList.accounts();
-    //@ts-ignore
-    await expect(instaIndex.build(userAddress, 1, userAddress)).to.emit(
-      instaIndex,
-      "LogAccountCreated"
-    );
-    const dsaID = dsaIDPrevious.add(1);
-    await expect(await instaList.accounts()).to.be.equal(dsaID);
-
-    // Instantiate the DSA
-    dsaAddress = await instaList.accountAddr(dsaID);
+    // Instantiate the InstaDapp DSA
+    dsaAddress = await createDSA(web3);
     dsa = await ethers.getContractAt(InstaAccount.abi, dsaAddress);
 
     // ===== GELATO SETUP ==================
     gelatoCore = await ethers.getContractAt(
       GelatoCoreLib.GelatoCore.abi,
-      // @ts-ignore
       bre.network.config.GelatoCore
     );
 
-    // Add GelatoCore as auth on DSA
+    // Add GelatoCore as auth on InstaDapp DSA
     const addAuthData = await bre.run("abi-encode-with-selector", {
       abi: ConnectAuth.abi,
       functionName: "add",
       inputs: [gelatoCore.address],
     });
     await dsa.cast(
-      // @ts-ignore
       [bre.network.config.ConnectAuth],
       [addAuthData],
       userAddress
@@ -123,7 +112,6 @@ describe("Move DAI lending from DSR to Compound", function () {
     // Instantiate ConnectGelato from mainnet
     connectGelato = await ethers.getContractAt(
       ConnectGelato_ABI,
-      // @ts-ignore
       bre.network.config.ConnectGelato
     );
 
@@ -151,47 +139,72 @@ describe("Move DAI lending from DSR to Compound", function () {
     await conditionCompareUints.deployed();
 
     // ===== Dapp Dependencies SETUP ==================
-    // This test assumes our user has 100 DAI deposited in Maker DSR
-    // @ts-ignore
-    dai = await ethers.getContractAt(IERC20.abi, bre.network.config.DAI);
-    expect(await dai.balanceOf(userAddress)).to.be.equal(0);
 
-    // Let's get the test user 100 DAI++ from Uniswap
-    // TODO use instadapp conector for this
-    const daiUniswapExchange = await ethers.getContractAt(
-      IUniswapExchange.abi,
-      // @ts-ignore
-      bre.network.config.DAI_UNISWAP
+    // Let's get open a maker vault with 10 eth, using instaDapp
+
+    // First transfer 20 eth to the DSA
+    const gasLimit = ethers.BigNumber.from(1000000);
+    const gasPrice = ethers.utils.parseUnits("20", "gwei");
+
+    const initialWalletBalance = await userWallet.getBalance();
+    expect(await ethers.provider.getBalance(dsaAddress)).to.be.equal(0);
+    await userWallet.sendTransaction({
+      to: dsaAddress,
+      value: ethers.utils.parseEther("20"),
+      gasLimit,
+      gasPrice,
+    });
+    expect(await userWallet.getBalance()).to.be.lt(
+      initialWalletBalance.sub(ethers.utils.parseEther("20"))
     );
-    await daiUniswapExchange.ethToTokenTransferInput(
-      1,
-      2525644800, // random timestamp in the future (year 2050)
-      userAddress,
-      {
-        value: ethers.utils.parseEther("2"),
-      }
+    expect(await ethers.provider.getBalance(dsaAddress)).to.be.equal(
+      ethers.utils.parseEther("20")
     );
-    expect(await dai.balanceOf(userAddress)).to.be.gte(DAI_100);
 
-    // Next we transfer the 100 DAI into our DSA
-    await dai.transfer(dsa.address, DAI_100);
-    expect(await dai.balanceOf(dsa.address)).to.be.eq(DAI_100);
-
-    // Next we deposit the 100 DAI into the DSR
-    const depositDai = await bre.run("abi-encode-with-selector", {
+    // Open vault
+    const openVaultData = await bre.run("abi-encode-with-selector", {
       abi: ConnectMaker.abi,
-      functionName: "depositDai",
-      inputs: [DAI_100, 0, 0],
+      functionName: "open",
+      inputs: ["ETH-A"],
     });
 
-    await expect(
-      // @ts-ignore
-      dsa.cast([bre.network.config.ConnectMaker], [depositDai], userAddress)
-    )
-      //@ts-ignore
-      .to.emit(dsa, "LogCast")
-      .withArgs(userAddress, userAddress, 0);
-    expect(await dai.balanceOf(dsa.address)).to.be.eq(0);
+    // Deposit 10 eth
+    const depositEthData = await bre.run("abi-encode-with-selector", {
+      abi: ConnectMaker.abi,
+      functionName: "deposit",
+      inputs: [0, ETH_10, 0, 0],
+    });
+
+    // Borrow max DAI amount (-1 is maximum) //TODO: get max amount
+    const borrowDaiData = await bre.run("abi-encode-with-selector", {
+      abi: ConnectMaker.abi,
+      functionName: "borrow",
+      inputs: [0, DAI_150, 0, 0],
+    });
+
+    // Casting it twice makes it easier for the network
+    await dsa.cast(
+      [bre.network.config.ConnectMaker, bre.network.config.ConnectMaker],
+      [openVaultData, depositEthData],
+      userAddress
+    );
+
+    await dsa.cast(
+      [bre.network.config.ConnectMaker],
+      [borrowDaiData],
+      userAddress
+    );
+
+    // Check that 10 eth was trasnfered to the vault
+    expect(await ethers.provider.getBalance(dsaAddress)).to.be.equal(ETH_10);
+
+    // Check that user's dsa received 150 DAI
+    dai = await ethers.getContractAt(IERC20.abi, bre.network.config.DAI);
+    expect(await dai.balanceOf(dsaAddress)).to.eq(
+      ethers.utils.parseUnits("150", 18)
+    );
+
+    console.log("Vault setup with 150 DAI Debt");
   });
 
   it("#1: Gelato refinances DAI from DSR=>Compound, if better rate", async function () {
@@ -220,30 +233,78 @@ describe("Move DAI lending from DSR to Compound", function () {
     // To assimilate to DSA SDK
     const spells: any[] = [];
 
-    // We instantiate target1: Withdraw DAI from DSR and setId 1 for
-    // target2 Compound deposit to fetch DAI amount.
-    const connectorWithdrawFromDSR = new GelatoCoreLib.Action({
-      addr: connectMaker.address,
+    let borrowAmount = dsaSdk.tokens.fromDecimal(200000, "dai");
+    // Borrow DAI from InstaPool
+    const connectorBorrowFromInstaPool = new GelatoCoreLib.Action({
+      addr: bre.network.config.ConnectInstaPool,
       data: await bre.run("abi-encode-with-selector", {
-        abi: ConnectMaker.abi,
-        functionName: "withdrawDai",
-        inputs: [ethers.constants.MaxUint256, 0, 1],
+        abi: ConnectInstaPool.abi,
+        functionName: "flashBorrow",
+        inputs: [bre.network.config.DAI, borrowAmount, 0, 0],
       }),
       operation: GelatoCoreLib.Operation.Delegatecall,
     });
-    spells.push(connectorWithdrawFromDSR);
+    // spells.push(connectorBorrowFromInstaPool); //TODO: fix flashloan from instapool
 
-    // We instantiate target2: Deposit DAI to CDAI and getId 1
-    const connectorDepositCompound = new GelatoCoreLib.Action({
-      addr: connectCompound.address,
+    // Payback Maker Vault with 150 DAI
+    const connectorPaybackMakerVault = new GelatoCoreLib.Action({
+      addr: bre.network.config.ConnectMaker,
+      data: await bre.run("abi-encode-with-selector", {
+        abi: ConnectMaker.abi,
+        functionName: "payback",
+        inputs: [0, dsaSdk.maxValue, 0, "534"], //TODO: use max payback and save it with setId
+      }),
+      operation: GelatoCoreLib.Operation.Delegatecall,
+    });
+    spells.push(connectorPaybackMakerVault);
+
+    // Withdraw ETH from Vault
+    const connectorWithdrawFromMakerVault = new GelatoCoreLib.Action({
+      addr: bre.network.config.ConnectMaker,
+      data: await bre.run("abi-encode-with-selector", {
+        abi: ConnectMaker.abi,
+        functionName: "withdraw",
+        inputs: [0, dsaSdk.maxValue, 0, "987"], //TODO: use max withdraw and save it with setId
+      }),
+      operation: GelatoCoreLib.Operation.Delegatecall,
+    });
+    spells.push(connectorWithdrawFromMakerVault);
+
+    // Deposit ETH into Compound Vault
+    const connectorDepositIntoCompound = new GelatoCoreLib.Action({
+      addr: bre.network.config.ConnectCompound,
       data: await bre.run("abi-encode-with-selector", {
         abi: ConnectCompound.abi,
         functionName: "deposit",
-        inputs: [dai.address, 0, 1, 0],
+        inputs: [ETH_Address, ETH_10, "987", 0], //TODO: use saved withdrawn amount and save it with setId
       }),
       operation: GelatoCoreLib.Operation.Delegatecall,
     });
-    spells.push(connectorDepositCompound);
+    spells.push(connectorDepositIntoCompound);
+
+    // Borrow DAI from Compound vault
+    const connectorBorrowFromCompound = new GelatoCoreLib.Action({
+      addr: bre.network.config.ConnectCompound,
+      data: await bre.run("abi-encode-with-selector", {
+        abi: ConnectCompound.abi,
+        functionName: "borrow",
+        inputs: [bre.network.config.DAI, DAI_150, "534", 0], //TODO: use saved withdrawn amount and save it with setId
+      }),
+      operation: GelatoCoreLib.Operation.Delegatecall,
+    });
+    spells.push(connectorBorrowFromCompound);
+
+    // Payback DAI InstaPool
+    const connectorPaybackInstaPool = new GelatoCoreLib.Action({
+      addr: bre.network.config.ConnectInstaPool,
+      data: await bre.run("abi-encode-with-selector", {
+        abi: ConnectInstaPool.abi,
+        functionName: "flashPayback",
+        inputs: [bre.network.config.DAI, 0, 0],
+      }),
+      operation: GelatoCoreLib.Operation.Delegatecall,
+    });
+    // spells.push(connectorPaybackInstaPool);
 
     // ======= Gelato Task Setup =========
     // A Gelato Task just combines Conditions with Actions
@@ -252,7 +313,7 @@ describe("Move DAI lending from DSR to Compound", function () {
     // one gas price in the current Gelato system: fast gwei read from Chainlink.
     const GAS_LIMIT = "4000000";
     const GAS_PRICE_CEIL = ethers.utils.parseUnits("1000", "gwei");
-    const taskRebalanceDSRToCDAIifBetter = new GelatoCoreLib.Task({
+    const taskRefinanceMakerToCompoundIfBetter = new GelatoCoreLib.Task({
       conditions: [rebalanceCondition],
       actions: spells,
       selfProviderGasLimit: GAS_LIMIT,
@@ -344,14 +405,15 @@ describe("Move DAI lending from DSR to Compound", function () {
     const expiryDate = 0;
     await expect(
       dsa.cast(
-        [connectGelato.address], // targets
+        //@ts-ignore
+        [bre.network.config.ConnectGelato], // targets
         [
           await bre.run("abi-encode-with-selector", {
             abi: ConnectGelato_ABI,
             functionName: "submitTask",
             inputs: [
               gelatoSelfProvider,
-              taskRebalanceDSRToCDAIifBetter,
+              taskRefinanceMakerToCompoundIfBetter,
               expiryDate,
             ],
           }),
@@ -361,7 +423,6 @@ describe("Move DAI lending from DSR to Compound", function () {
           gasLimit: 5000000,
         }
       )
-      //@ts-ignore
     ).to.emit(gelatoCore, "LogTaskSubmitted");
 
     // Task Receipt: a successfully submitted Task in Gelato
@@ -372,7 +433,7 @@ describe("Move DAI lending from DSR to Compound", function () {
       id: taskReceiptId,
       userProxy: dsa.address,
       provider: gelatoSelfProvider,
-      tasks: [taskRebalanceDSRToCDAIifBetter],
+      tasks: [taskRefinanceMakerToCompoundIfBetter],
       expiryDate,
     });
 
@@ -386,7 +447,7 @@ describe("Move DAI lending from DSR to Compound", function () {
     // to remain executable up until.
     const gelatoGasPrice = await bre.run("fetchGelatoGasPrice");
     expect(gelatoGasPrice).to.be.lte(
-      taskRebalanceDSRToCDAIifBetter.selfProviderGasPriceCeil
+      taskRefinanceMakerToCompoundIfBetter.selfProviderGasPriceCeil
     );
 
     // Let's first check if our Task is executable. Since both MockDSR and MockCDAI
@@ -398,7 +459,7 @@ describe("Move DAI lending from DSR to Compound", function () {
     expect(
       await gelatoCore.canExec(
         taskReceipt,
-        taskRebalanceDSRToCDAIifBetter.selfProviderGasLimit,
+        taskRefinanceMakerToCompoundIfBetter.selfProviderGasLimit,
         gelatoGasPrice
       )
     ).to.be.equal("ConditionNotOk:ANotGreaterOrEqualToBbyMinspread");
@@ -413,32 +474,30 @@ describe("Move DAI lending from DSR to Compound", function () {
     expect(
       await gelatoCore.canExec(
         taskReceipt,
-        taskRebalanceDSRToCDAIifBetter.selfProviderGasLimit,
+        taskRefinanceMakerToCompoundIfBetter.selfProviderGasLimit,
         gelatoGasPrice
       )
     ).to.be.equal("OK");
-
-    // To verify whether the execution of DSR=>CDAI has been successful in this Testing
-    // we look at changes in the CDAI balance of the DSA
-    const cDAI = await ethers.getContractAt(
-      IERC20.abi,
-      // @ts-ignore
-      bre.network.config.CDAI
-    );
-
-    const dsaCDAIBefore = await cDAI.balanceOf(dsa.address);
 
     // For testing we now simulate automatic Task Execution ❗
     await expect(
       gelatoCore.exec(taskReceipt, {
         gasPrice: gelatoGasPrice, // Executor must use gelatoGasPrice (Chainlink fast gwei)
-        gasLimit: taskRebalanceDSRToCDAIifBetter.selfProviderGasLimit,
+        gasLimit: taskRefinanceMakerToCompoundIfBetter.selfProviderGasLimit,
       })
-      //@ts-ignore
     ).to.emit(gelatoCore, "LogExecSuccess");
 
-    // Since the Execution was successful, we now expect our DSA to hold more
-    // CDAI then before. This concludes our testing.
-    expect(await cDAI.balanceOf(dsa.address)).to.be.gt(dsaCDAIBefore);
+    // Checking that a 150 DAI borrow position is open on Compound
+    expect((await dsaSdk.compound.getPosition(dsaAddress)).dai.borrow).to.eq(
+      150
+    );
+
+    // Checking that the Maker flash loan has been closed
+    const vault = await dsaSdk.maker.getVaults(dsaAddress);
+    let debt;
+    Object.keys(vault).forEach((key) => {
+      debt = vault[key].debt;
+    });
+    expect(debt).to.eq(0);
   });
 });

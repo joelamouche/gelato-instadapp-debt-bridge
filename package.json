@@ -4,6 +4,7 @@
   "description": "The smart contract and tests for gelato-instadapp debt bridge",
   "repository": "https://github.com/joelamouche/gelato-instadapp-debt-bridge/",
   "author": "Antoine Estienne",
+  "main": "index.ts",
   "private": false,
   "scripts": {
     "build": "npm run compile && npx buidler typechain",

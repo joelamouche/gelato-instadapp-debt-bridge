@@ -6,7 +6,7 @@ const { ethers } = bre;
 const GelatoCoreLib = require("@gelatonetwork/core");
 const { sleep } = GelatoCoreLib;
 
-export {}
+export {};
 
 // Constants
 const ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
@@ -20,7 +20,7 @@ const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
 const ConnectBasic = require("../pre-compiles/ConnectBasic.json");
 const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.json");
 
-const ConnectGelato =require("../artifacts/ConnectGelato")
+const ConnectGelato = require("../artifacts/ConnectGelato");
 
 describe("DSA setup with Gelato Tests", function () {
   this.timeout(50000);
@@ -104,7 +104,7 @@ describe("DSA setup with Gelato Tests", function () {
     providerModuleDSA = await ethers.getContractAt(
       ProviderModuleDSA_ABI,
       bre.network.config.ProviderModuleDSA
-    )
+    );
   });
 
   it("#1: Forks InstaDapp Mainnet config", async function () {
@@ -122,7 +122,7 @@ describe("DSA setup with Gelato Tests", function () {
     expect(await instaConnectors.connectors(bre.network.config.ConnectCompound))
       .to.be.true;
     expect(await instaConnectors.connectors(bre.network.config.ConnectGelato))
-        .to.be.true;
+      .to.be.true;
   });
 
   it("#2: Deploys a DSA with user as authority", async function () {
@@ -194,9 +194,9 @@ describe("DSA setup with Gelato Tests", function () {
 
   it("#5: ConnectGelato is deployed and whitelisted on mainnet", async function () {
     expect(
-    await instaConnectors.isConnector([bre.network.config.ConnectGelato])
+      await instaConnectors.isConnector([bre.network.config.ConnectGelato])
     ).to.be.true;
-  })
+  });
 
   it("#6: Gelato ProviderModuleDSA returns correct execPayload", async function () {
     // Deposit 1 ETH into DSA

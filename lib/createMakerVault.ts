@@ -11,11 +11,10 @@ export async function createMakerVault(web3:Web3,dsaAddress:string, eth_amount:n
     const dsaSdk=new DSA(web3)
     //setup ethers
     let provider = new ethers.providers.Web3Provider(web3.currentProvider as any);
-    
     let userWallet:ethers.ethers.providers.JsonRpcSigner = await provider.getSigner();
     let userAddress:string = await userWallet.getAddress();
     
-    let dsa = new Contract(InstaAccount.abi, dsaAddress);
+    let dsa = new Contract(InstaAccount.abi, dsaAddress, provider);
     
     const gasLimit = BigNumber.from(1000000);
     const gasPrice = utils.parseUnits("20", "gwei");
