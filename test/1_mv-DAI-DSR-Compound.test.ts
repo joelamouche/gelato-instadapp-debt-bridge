@@ -27,8 +27,9 @@ const ConnectMaker = require("../pre-compiles/ConnectMaker.json");
 const ConnectCompound = require("../pre-compiles/ConnectCompound.json");
 const IERC20 = require("../pre-compiles/IERC20.json");
 const IUniswapExchange = require("../pre-compiles/IUniswapExchange.json");
+const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.json");
 
-const ConnectGelato =require("../artifacts/ConnectGelato")
+const ConnectGelato_ABI =require("../pre-compiles/ConnectGelato_ABI")
 
 describe("Move DAI lending from DSR to Compound", function () {
   this.timeout(0);
@@ -48,13 +49,13 @@ describe("Move DAI lending from DSR to Compound", function () {
   let gelatoCore;
   let dai;
   let connectGelato;
+  let providerModuleDSA;
 
   // Contracts to deploy and use for local testing
   let dsa;
   let mockDSR;
   let mockCDAI;
   let conditionCompareUints;
-  let providerModuleDSA;
 
   before(async function () {
     // Get Test Wallet for local testnet
@@ -125,20 +126,17 @@ describe("Move DAI lending from DSR to Compound", function () {
 
     // Instantiate ConnectGelato from mainnet
     connectGelato = await ethers.getContractAt(
-      ConnectGelato.abi,
+      ConnectGelato_ABI,
       // @ts-ignore
       bre.network.config.ConnectGelato
     );
 
-    // Deploy ProviderModuleDSA to local testnet
-    const ProviderModuleDSA = await ethers.getContractFactory(
-      "ProviderModuleDSA"
-    );
-    providerModuleDSA = await ProviderModuleDSA.deploy(
-      instaIndex.address,
-      gelatoCore.address
-    );
-    await providerModuleDSA.deployed();
+    // get DSA from mainnet
+    providerModuleDSA = await ethers.getContractAt(
+      ProviderModuleDSA_ABI,
+      //@ts-ignore
+      bre.network.config.ProviderModuleDSA
+    )
 
     // Deploy Mocks for Testing
     const MockCDAI = await ethers.getContractFactory("MockCDAI");
@@ -278,7 +276,8 @@ describe("Move DAI lending from DSR to Compound", function () {
     // protocol. Check out ./contracts/ProviderModuleDSA.sol to see what it does.
     const gelatoSelfProvider = new GelatoCoreLib.GelatoProvider({
       addr: dsa.address,
-      module: providerModuleDSA.address,
+      //@ts-ignore
+      module: bre.network.config.ProviderModuleDSA,
     });
 
     // ======= Executor Setup =========
@@ -302,15 +301,17 @@ describe("Move DAI lending from DSR to Compound", function () {
     );
     
     await dsa.cast(
-      [connectGelato.address], // targets
+      //@ts-ignore
+      [bre.network.config.ConnectGelato], // targets
       [
         await bre.run("abi-encode-with-selector", {
-          abi: require("../artifacts/ConnectGelato.json").abi,
+          abi: ConnectGelato_ABI,
           functionName: "multiProvide",
           inputs: [
             userAddress,
             [],
-            [providerModuleDSA.address],
+            //@ts-ignore
+            [bre.network.config.ProviderModuleDSA],
             TASK_AUTOMATION_FUNDS,
             0,
             0
@@ -334,7 +335,11 @@ describe("Move DAI lending from DSR to Compound", function () {
       userAddress
     );
     expect(
-      await gelatoCore.isModuleProvided(dsa.address, providerModuleDSA.address)
+      await gelatoCore.isModuleProvided(
+        dsa.address, 
+        // @ts-ignore
+        bre.network.config.ProviderModuleDSA
+      )
     ).to.be.true;
 
     // ======= 📣 TASK SUBMISSION 📣 =========
@@ -346,7 +351,7 @@ describe("Move DAI lending from DSR to Compound", function () {
         [connectGelato.address], // targets
         [
           await bre.run("abi-encode-with-selector", {
-            abi: require("../artifacts/ConnectGelato.json").abi,
+            abi: ConnectGelato_ABI,
             functionName: "submitTask",
             inputs: [
               gelatoSelfProvider,

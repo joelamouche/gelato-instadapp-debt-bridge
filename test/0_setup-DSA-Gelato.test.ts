@@ -18,6 +18,7 @@ const InstaConnectors = require("../pre-compiles/InstaConnectors.json");
 const InstaAccount = require("../pre-compiles/InstaAccount.json");
 const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
 const ConnectBasic = require("../pre-compiles/ConnectBasic.json");
+const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.json");
 
 const ConnectGelato =require("../artifacts/ConnectGelato")
 
@@ -32,7 +33,6 @@ describe("DSA setup with Gelato Tests", function () {
   let userWallet;
   let userAddress;
   let dsaAddress;
-  // let instaMaster;
 
   // Deployed instances
   let instaIndex;
@@ -40,10 +40,10 @@ describe("DSA setup with Gelato Tests", function () {
   let instaConnectors;
   let instaAccount;
   let gelatoCore;
+  let providerModuleDSA;
 
   // Contracts to deploy and use for local testing
   let dsa;
-  let providerModuleDSA;
   let connectGelato;
 
   // Other variables
@@ -100,15 +100,11 @@ describe("DSA setup with Gelato Tests", function () {
       bre.network.config.ConnectGelato
     );
 
-    // Deploy ProviderModuleDSA to local testnet
-    const ProviderModuleDSA = await ethers.getContractFactory(
-      "ProviderModuleDSA"
-    );
-    providerModuleDSA = await ProviderModuleDSA.deploy(
-      instaIndex.address,
-      gelatoCore.address
-    );
-    await providerModuleDSA.deployed();
+    // get DSA from mainnet
+    providerModuleDSA = await ethers.getContractAt(
+      ProviderModuleDSA_ABI,
+      bre.network.config.ProviderModuleDSA
+    )
   });
 
   it("#1: Forks InstaDapp Mainnet config", async function () {
@@ -196,7 +192,13 @@ describe("DSA setup with Gelato Tests", function () {
     expect(await dsa.isAuth(gelatoCore.address)).to.be.true;
   });
 
-  it("#5: Gelato ProviderModuleDSA returns correct execPayload", async function () {
+  it("#5: ConnectGelato is deployed and whitelisted on mainnet", async function () {
+    expect(
+    await instaConnectors.isConnector([bre.network.config.ConnectGelato])
+    ).to.be.true;
+  })
+
+  it("#6: Gelato ProviderModuleDSA returns correct execPayload", async function () {
     // Deposit 1 ETH into DSA
     await userWallet.sendTransaction({
       to: dsaAddress,
