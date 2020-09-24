@@ -4,7 +4,7 @@ const { expect } = require("chai");
 const bre = require("@nomiclabs/buidler");
 const { ethers } = bre;
 const GelatoCoreLib = require("@gelatonetwork/core");
-const { sleep } = GelatoCoreLib;
+import { constants } from "../constants/constants";
 
 export {};
 
@@ -58,19 +58,16 @@ describe("DSA setup with Gelato Tests", function () {
     // ===== DSA LOCAL SETUP ==================
     instaIndex = await ethers.getContractAt(
       InstaIndex.abi,
-      bre.network.config.InstaIndex
+      constants.InstaIndex
     );
-    instaList = await ethers.getContractAt(
-      InstaList.abi,
-      bre.network.config.InstaList
-    );
+    instaList = await ethers.getContractAt(InstaList.abi, constants.InstaList);
     instaConnectors = await ethers.getContractAt(
       InstaConnectors.abi,
-      bre.network.config.InstaConnectors
+      constants.InstaConnectors
     );
     instaAccount = await ethers.getContractAt(
       InstaAccount.abi,
-      bre.network.config.InstaAccount
+      constants.InstaAccount
     );
 
     dsaVersion = await instaAccount.version();
@@ -91,19 +88,19 @@ describe("DSA setup with Gelato Tests", function () {
     // ===== GELATO LOCAL SETUP ==================
     gelatoCore = await ethers.getContractAt(
       GelatoCoreLib.GelatoCore.abi,
-      bre.network.config.GelatoCore
+      constants.GelatoCore
     );
 
     // Instantiate ConnectGelato from mainnet
     connectGelato = await ethers.getContractAt(
       ConnectGelato.abi,
-      bre.network.config.ConnectGelato
+      constants.ConnectGelato
     );
 
     // get DSA from mainnet
     providerModuleDSA = await ethers.getContractAt(
       ProviderModuleDSA_ABI,
-      bre.network.config.ProviderModuleDSA
+      constants.ProviderModuleDSA
     );
   });
 
@@ -113,16 +110,13 @@ describe("DSA setup with Gelato Tests", function () {
     expect(await instaIndex.connectors(dsaVersion)).to.be.equal(
       instaConnectors.address
     );
-    expect(await instaConnectors.connectors(bre.network.config.ConnectAuth)).to
-      .be.true;
-    expect(await instaConnectors.connectors(bre.network.config.ConnectBasic)).to
-      .be.true;
-    expect(await instaConnectors.connectors(bre.network.config.ConnectMaker)).to
-      .be.true;
-    expect(await instaConnectors.connectors(bre.network.config.ConnectCompound))
-      .to.be.true;
-    expect(await instaConnectors.connectors(bre.network.config.ConnectGelato))
-      .to.be.true;
+    expect(await instaConnectors.connectors(constants.ConnectAuth)).to.be.true;
+    expect(await instaConnectors.connectors(constants.ConnectBasic)).to.be.true;
+    expect(await instaConnectors.connectors(constants.ConnectMaker)).to.be.true;
+    expect(await instaConnectors.connectors(constants.ConnectCompound)).to.be
+      .true;
+    expect(await instaConnectors.connectors(constants.ConnectGelato)).to.be
+      .true;
   });
 
   it("#2: Deploys a DSA with user as authority", async function () {
@@ -159,7 +153,7 @@ describe("DSA setup with Gelato Tests", function () {
     });
 
     await expect(
-      dsa.cast([bre.network.config.ConnectBasic], [withdrawData], userAddress, {
+      dsa.cast([constants.ConnectBasic], [withdrawData], userAddress, {
         gasLimit,
         gasPrice,
       })
@@ -183,9 +177,7 @@ describe("DSA setup with Gelato Tests", function () {
       inputs: [gelatoCore.address],
     });
 
-    await expect(
-      dsa.cast([bre.network.config.ConnectAuth], [addAuthData], userAddress)
-    )
+    await expect(dsa.cast([constants.ConnectAuth], [addAuthData], userAddress))
       .to.emit(dsa, "LogCast")
       .withArgs(userAddress, userAddress, 0);
 
@@ -193,9 +185,8 @@ describe("DSA setup with Gelato Tests", function () {
   });
 
   it("#5: ConnectGelato is deployed and whitelisted on mainnet", async function () {
-    expect(
-      await instaConnectors.isConnector([bre.network.config.ConnectGelato])
-    ).to.be.true;
+    expect(await instaConnectors.isConnector([constants.ConnectGelato])).to.be
+      .true;
   });
 
   it("#6: Gelato ProviderModuleDSA returns correct execPayload", async function () {
@@ -215,7 +206,7 @@ describe("DSA setup with Gelato Tests", function () {
     const withdrawFromDSATask = new GelatoCoreLib.Task({
       actions: [
         new GelatoCoreLib.Action({
-          addr: bre.network.config.ConnectBasic,
+          addr: constants.ConnectBasic,
           data: await bre.run("abi-encode-with-selector", {
             abi: ConnectBasic.abi,
             functionName: "withdraw",
@@ -238,11 +229,7 @@ describe("DSA setup with Gelato Tests", function () {
       functionName: "add",
       inputs: [await otherWallet.getAddress()],
     });
-    await dsa.cast(
-      [bre.network.config.ConnectAuth],
-      [addAuthData],
-      userAddress
-    );
+    await dsa.cast([constants.ConnectAuth], [addAuthData], userAddress);
 
     const [execPayload] = await providerModuleDSA.execPayload(
       0, // placeholder
