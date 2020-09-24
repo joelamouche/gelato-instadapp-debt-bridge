@@ -1,6 +1,7 @@
 // running `npx buidler test` automatically makes use of buidler-waffle plugin
 
 import { createDSA } from "../lib/createDSA";
+import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
 import { createMakerVault } from "../lib/createMakerVault";
 
 // => only dependency we need is "chai"
@@ -11,7 +12,6 @@ const GelatoCoreLib = require("@gelatonetwork/core");
 const { BigNumber } = require("ethers");
 const DSA = require("dsa-sdk");
 const Web3 = require("web3");
-const { sleep } = GelatoCoreLib;
 export {};
 
 // Set up dsa sdk from instaDapp to get resolvers
@@ -19,18 +19,14 @@ const web3 = new Web3("http://localhost:8545");
 const dsaSdk = new DSA(web3);
 
 // Constants
-const ETH_Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 const ETH_10 = ethers.utils.parseEther("10");
 const DAI_150 = ethers.utils.parseUnits("150", 18);
 const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 
 // Contracts
-const InstaIndex = require("../pre-compiles/InstaIndex.json");
-const InstaList = require("../pre-compiles/InstaList.json");
 const InstaAccount = require("../pre-compiles/InstaAccount.json");
 const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
 const ConnectMaker = require("../pre-compiles/ConnectMaker.json");
-const ConnectInstaPool = require("../pre-compiles/ConnectInstaPool.json");
 const ConnectCompound = require("../pre-compiles/ConnectCompound.json");
 const IERC20 = require("../pre-compiles/IERC20.json");
 const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.json");
@@ -45,12 +41,10 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
   }
   // Wallet to use for local testing
   let userWallet;
-  let userAddress;
-  let dsaAddress;
+  let userAddress: string;
+  let dsaAddress: string;
 
   // Deployed instances
-  let connectMaker;
-  let connectCompound;
   let gelatoCore;
   let dai;
   let connectGelato;
@@ -71,22 +65,6 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
     expect(await userWallet.getBalance()).to.be.gt(ETH_10);
 
     // ===== DSA SETUP ==================
-    const instaIndex = await ethers.getContractAt(
-      InstaIndex.abi,
-      bre.network.config.InstaIndex
-    );
-    const instaList = await ethers.getContractAt(
-      InstaList.abi,
-      bre.network.config.InstaList
-    );
-    connectMaker = await ethers.getContractAt(
-      ConnectMaker.abi,
-      bre.network.config.ConnectMaker
-    );
-    connectCompound = await ethers.getContractAt(
-      ConnectCompound.abi,
-      bre.network.config.ConnectCompound
-    );
     // Instantiate the InstaDapp DSA
     dsaAddress = await createDSA(web3);
     dsa = await ethers.getContractAt(InstaAccount.abi, dsaAddress);
@@ -172,175 +150,30 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
     // We instantiate the Rebalance Condition:
     // Compound APY needs to be 10000000 per second points higher than DSR
     const MIN_SPREAD = "10000000";
-    const rebalanceCondition = new GelatoCoreLib.Condition({
-      inst: conditionCompareUints.address,
-      data: await conditionCompareUints.getConditionData(
-        mockCDAI.address, // We are in DSR so we compare against CDAI => SourceA=CDAI
-        mockDSR.address, // SourceB=DSR
-        await bre.run("abi-encode-with-selector", {
-          abi: require("../artifacts/MockCDAI.json").abi,
-          functionName: "supplyRatePerSecond",
-        }), // CDAI data feed first (sourceAData)
-        await bre.run("abi-encode-with-selector", {
-          abi: require("../artifacts/MockDSR.json").abi,
-          functionName: "dsr",
-        }), // DSR data feed second (sourceBData)
-        MIN_SPREAD
-      ),
-    });
-
-    // ======= Action/Spells setup ======
-    // To assimilate to DSA SDK
-    const spells: any[] = [];
-
-    let borrowAmount = dsaSdk.tokens.fromDecimal(200000, "dai");
-    // Borrow DAI from InstaPool
-    const connectorBorrowFromInstaPool = new GelatoCoreLib.Action({
-      addr: bre.network.config.ConnectInstaPool,
-      data: await bre.run("abi-encode-with-selector", {
-        abi: ConnectInstaPool.abi,
-        functionName: "flashBorrow",
-        inputs: [bre.network.config.DAI, borrowAmount, 0, 0],
-      }),
-      operation: GelatoCoreLib.Operation.Delegatecall,
-    });
-    // spells.push(connectorBorrowFromInstaPool); //TODO: fix flashloan from instapool
-
-    // Payback Maker Vault with 150 DAI
-    const connectorPaybackMakerVault = new GelatoCoreLib.Action({
-      addr: bre.network.config.ConnectMaker,
-      data: await bre.run("abi-encode-with-selector", {
-        abi: ConnectMaker.abi,
-        functionName: "payback",
-        inputs: [0, dsaSdk.maxValue, 0, "534"], //TODO: use max payback and save it with setId
-      }),
-      operation: GelatoCoreLib.Operation.Delegatecall,
-    });
-    spells.push(connectorPaybackMakerVault);
-
-    // Withdraw ETH from Vault
-    const connectorWithdrawFromMakerVault = new GelatoCoreLib.Action({
-      addr: bre.network.config.ConnectMaker,
-      data: await bre.run("abi-encode-with-selector", {
-        abi: ConnectMaker.abi,
-        functionName: "withdraw",
-        inputs: [0, dsaSdk.maxValue, 0, "987"], //TODO: use max withdraw and save it with setId
-      }),
-      operation: GelatoCoreLib.Operation.Delegatecall,
-    });
-    spells.push(connectorWithdrawFromMakerVault);
-
-    // Deposit ETH into Compound Vault
-    const connectorDepositIntoCompound = new GelatoCoreLib.Action({
-      addr: bre.network.config.ConnectCompound,
-      data: await bre.run("abi-encode-with-selector", {
-        abi: ConnectCompound.abi,
-        functionName: "deposit",
-        inputs: [ETH_Address, ETH_10, "987", 0], //TODO: use saved withdrawn amount and save it with setId
-      }),
-      operation: GelatoCoreLib.Operation.Delegatecall,
-    });
-    spells.push(connectorDepositIntoCompound);
-
-    // Borrow DAI from Compound vault
-    const connectorBorrowFromCompound = new GelatoCoreLib.Action({
-      addr: bre.network.config.ConnectCompound,
-      data: await bre.run("abi-encode-with-selector", {
-        abi: ConnectCompound.abi,
-        functionName: "borrow",
-        inputs: [bre.network.config.DAI, dsaSdk.maxValue, "534", 0], //TODO: use saved withdrawn amount and save it with setId
-      }),
-      operation: GelatoCoreLib.Operation.Delegatecall,
-    });
-    spells.push(connectorBorrowFromCompound);
-
-    // Payback DAI InstaPool
-    const connectorPaybackInstaPool = new GelatoCoreLib.Action({
-      addr: bre.network.config.ConnectInstaPool,
-      data: await bre.run("abi-encode-with-selector", {
-        abi: ConnectInstaPool.abi,
-        functionName: "flashPayback",
-        inputs: [bre.network.config.DAI, 0, 0],
-      }),
-      operation: GelatoCoreLib.Operation.Delegatecall,
-    });
-    // spells.push(connectorPaybackInstaPool);
 
     // ======= Gelato Task Setup =========
-    // A Gelato Task just combines Conditions with Actions
-    // You also specify how much GAS a Task consumes at max and the ceiling
-    // gas price under which you are willing to auto-transact. There is only
-    // one gas price in the current Gelato system: fast gwei read from Chainlink.
+    // For testing purpose
     const GAS_LIMIT = "4000000";
     const GAS_PRICE_CEIL = ethers.utils.parseUnits("1000", "gwei");
-    const taskRefinanceMakerToCompoundIfBetter = new GelatoCoreLib.Task({
-      conditions: [rebalanceCondition],
-      actions: spells,
-      selfProviderGasLimit: GAS_LIMIT,
-      selfProviderGasPriceCeil: GAS_PRICE_CEIL,
-    });
-
-    // ======= Gelato Provider setup ======
-    // Someone needs to pay for gas for automatic Task execution on Gelato.
-    // Gelato has the concept of a "Provider" to denote who is providing (depositing)
-    // ETH on Gelato in order to pay for automation gas. In our case, the User
-    // is paying for his own automation gas. Therefore, the User is a "Self-Provider".
-    // But since Gelato only talks to smart contract accounts, the User's DSA proxy
-    // plays the part of the "Self-Provider" on behalf of the User behind the DSA.
-    // A GelatoProvider is an object with the address of the provider - in our case
-    // the DSA address - and the address of the "ProviderModule". This module
-    // fulfills certain functions like encoding the execution payload for the Gelato
-    // protocol. Check out ./contracts/ProviderModuleDSA.sol to see what it does.
-    const gelatoSelfProvider = new GelatoCoreLib.GelatoProvider({
-      addr: dsa.address,
-      //@ts-ignore
-      module: bre.network.config.ProviderModuleDSA,
-    });
-
-    // ======= Executor Setup =========
-    // For local Testing purposes our test User account will play the role of the Gelato
-    // Executor network because this logic is non-trivial to fork into a local instance
-    await gelatoCore.stakeExecutor({
-      value: await gelatoCore.minExecutorStake(),
-    });
-    expect(await gelatoCore.isExecutorMinStaked(userAddress)).to.be.true;
 
     // ======= Gelato Task Provision =========
-    // Gelato requires some initial setup via its multiProvide API
-    // We must 1) provide ETH to pay for future automation gas, 2) we must
-    // assign an Executor network to the Task, 3) we must tell Gelato what
-    // "ProviderModule" we want to use for our Task.
-    // Since our DSA proxy is the one through which we interact with Gelato,
-    // we must do this setup via the DSA proxy by using ConnectGelato
+    // For testing purpose
     const TASK_AUTOMATION_FUNDS = await gelatoCore.minExecProviderFunds(
       GAS_LIMIT,
       GAS_PRICE_CEIL
     );
 
-    await dsa.cast(
-      //@ts-ignore
-      [bre.network.config.ConnectGelato], // targets
-      [
-        await bre.run("abi-encode-with-selector", {
-          abi: ConnectGelato_ABI,
-          functionName: "multiProvide",
-          inputs: [
-            userAddress,
-            [],
-            //@ts-ignore
-            [bre.network.config.ProviderModuleDSA],
-            TASK_AUTOMATION_FUNDS,
-            0,
-            0,
-          ],
-        }),
-      ], // datas
-      userAddress, // origin
-      {
-        value: TASK_AUTOMATION_FUNDS,
-        gasLimit: 5000000,
-      }
+    // Create Gelato Optimizer
+    const taskReceipt = await createGelatoOptimizer(
+      web3,
+      dsa.address,
+      ETH_10,
+      mockCDAI.address,
+      mockDSR.address,
+      conditionCompareUints.address
     );
+
+    expect(await gelatoCore.isExecutorMinStaked(userAddress)).to.be.true;
 
     expect(await gelatoCore.providerFunds(dsa.address)).to.be.gte(
       TASK_AUTOMATION_FUNDS
@@ -359,44 +192,6 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
       )
     ).to.be.true;
 
-    // ======= 📣 TASK SUBMISSION 📣 =========
-    // In Gelato world our DSA is the User. So we must submit the Task
-    // to Gelato via our DSA and hence use ConnectGelato again.
-    const expiryDate = 0;
-    await expect(
-      dsa.cast(
-        //@ts-ignore
-        [bre.network.config.ConnectGelato], // targets
-        [
-          await bre.run("abi-encode-with-selector", {
-            abi: ConnectGelato_ABI,
-            functionName: "submitTask",
-            inputs: [
-              gelatoSelfProvider,
-              taskRefinanceMakerToCompoundIfBetter,
-              expiryDate,
-            ],
-          }),
-        ], // datas
-        userAddress, // origin
-        {
-          gasLimit: 5000000,
-        }
-      )
-    ).to.emit(gelatoCore, "LogTaskSubmitted");
-
-    // Task Receipt: a successfully submitted Task in Gelato
-    // is wrapped in a TaskReceipt. For testing we instantiate the TaskReceipt
-    // for our to be submitted Task.
-    const taskReceiptId = await gelatoCore.currentTaskReceiptId();
-    const taskReceipt = new GelatoCoreLib.TaskReceipt({
-      id: taskReceiptId,
-      userProxy: dsa.address,
-      provider: gelatoSelfProvider,
-      tasks: [taskRefinanceMakerToCompoundIfBetter],
-      expiryDate,
-    });
-
     // ======= 📣 TASK EXECUTION 📣 =========
     // This stuff is normally automated by the Gelato Network and Dapp Developers
     // and their Users don't have to take care of it. However, for local testing
@@ -406,9 +201,7 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
     // allows Users to specify a maximum fast gwei gas price for their Tasks
     // to remain executable up until.
     const gelatoGasPrice = await bre.run("fetchGelatoGasPrice");
-    expect(gelatoGasPrice).to.be.lte(
-      taskRefinanceMakerToCompoundIfBetter.selfProviderGasPriceCeil
-    );
+    expect(gelatoGasPrice).to.be.lte(GAS_PRICE_CEIL);
 
     // Let's first check if our Task is executable. Since both MockDSR and MockCDAI
     // start with a normalized per second rate of APY_2_PERCENT_IN_SECONDS
@@ -417,11 +210,7 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
     // Check out contracts/ConditionCompareUintsFromTwoSources.sol to see how
     // how the comparison of MockDSR and MockCDAI is implemented in Condition code.
     expect(
-      await gelatoCore.canExec(
-        taskReceipt,
-        taskRefinanceMakerToCompoundIfBetter.selfProviderGasLimit,
-        gelatoGasPrice
-      )
+      await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
     ).to.be.equal("ConditionNotOk:ANotGreaterOrEqualToBbyMinspread");
 
     // We defined a MIN_SPREAD of 10000000 points in the per second rate
@@ -432,18 +221,14 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
       (await mockDSR.dsr()).add(MIN_SPREAD)
     );
     expect(
-      await gelatoCore.canExec(
-        taskReceipt,
-        taskRefinanceMakerToCompoundIfBetter.selfProviderGasLimit,
-        gelatoGasPrice
-      )
+      await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
     ).to.be.equal("OK");
 
     // For testing we now simulate automatic Task Execution ❗
     await expect(
       gelatoCore.exec(taskReceipt, {
         gasPrice: gelatoGasPrice, // Executor must use gelatoGasPrice (Chainlink fast gwei)
-        gasLimit: taskRefinanceMakerToCompoundIfBetter.selfProviderGasLimit,
+        gasLimit: GAS_LIMIT,
       })
     ).to.emit(gelatoCore, "LogExecSuccess");
 
