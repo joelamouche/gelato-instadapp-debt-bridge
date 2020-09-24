@@ -1,6 +1,7 @@
 // running `npx buidler test` automatically makes use of buidler-waffle plugin
 
 import { createDSA } from "../lib/createDSA";
+import { createMakerVault } from "../lib/createMakerVault";
 
 // => only dependency we need is "chai"
 const { expect } = require("chai");
@@ -36,7 +37,7 @@ const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.jso
 
 const ConnectGelato_ABI = require("../pre-compiles/ConnectGelato_ABI");
 
-describe("Move DAI Debt from Maker to Compound", function () {
+describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
   this.timeout(0);
   if (bre.network.name !== "ganache") {
     console.error("Test Suite is meant to be run on ganache only");
@@ -141,68 +142,27 @@ describe("Move DAI Debt from Maker to Compound", function () {
     // ===== Dapp Dependencies SETUP ==================
 
     // Let's get open a maker vault with 10 eth, using instaDapp
+    const initialWalletBalance = await ethers.provider.getBalance(userAddress);
 
-    // First transfer 20 eth to the DSA
-    const gasLimit = ethers.BigNumber.from(1000000);
-    const gasPrice = ethers.utils.parseUnits("20", "gwei");
+    const vaults = await createMakerVault(web3, dsaAddress, ETH_10, DAI_150);
 
-    const initialWalletBalance = await userWallet.getBalance();
-    expect(await ethers.provider.getBalance(dsaAddress)).to.be.equal(0);
-    await userWallet.sendTransaction({
-      to: dsaAddress,
-      value: ethers.utils.parseEther("20"),
-      gasLimit,
-      gasPrice,
+    // Check that 10 eth was transferred to the vault
+    let debt, col;
+    Object.keys(vaults).forEach((key) => {
+      debt = vaults[key].debt;
+      col = vaults[key].col;
     });
-    expect(await userWallet.getBalance()).to.be.lt(
-      initialWalletBalance.sub(ethers.utils.parseEther("20"))
+    expect(debt).to.eq(150);
+    expect(col).to.eq(10);
+
+    // Check that user has 10 eth less
+    expect(await ethers.provider.getBalance(userAddress)).to.be.lt(
+      initialWalletBalance.sub(ETH_10)
     );
-    expect(await ethers.provider.getBalance(dsaAddress)).to.be.equal(
-      ethers.utils.parseEther("20")
-    );
-
-    // Open vault
-    const openVaultData = await bre.run("abi-encode-with-selector", {
-      abi: ConnectMaker.abi,
-      functionName: "open",
-      inputs: ["ETH-A"],
-    });
-
-    // Deposit 10 eth
-    const depositEthData = await bre.run("abi-encode-with-selector", {
-      abi: ConnectMaker.abi,
-      functionName: "deposit",
-      inputs: [0, ETH_10, 0, 0],
-    });
-
-    // Borrow max DAI amount (-1 is maximum) //TODO: get max amount
-    const borrowDaiData = await bre.run("abi-encode-with-selector", {
-      abi: ConnectMaker.abi,
-      functionName: "borrow",
-      inputs: [0, DAI_150, 0, 0],
-    });
-
-    // Casting it twice makes it easier for the network
-    await dsa.cast(
-      [bre.network.config.ConnectMaker, bre.network.config.ConnectMaker],
-      [openVaultData, depositEthData],
-      userAddress
-    );
-
-    await dsa.cast(
-      [bre.network.config.ConnectMaker],
-      [borrowDaiData],
-      userAddress
-    );
-
-    // Check that 10 eth was trasnfered to the vault
-    expect(await ethers.provider.getBalance(dsaAddress)).to.be.equal(ETH_10);
 
     // Check that user's dsa received 150 DAI
     dai = await ethers.getContractAt(IERC20.abi, bre.network.config.DAI);
-    expect(await dai.balanceOf(dsaAddress)).to.eq(
-      ethers.utils.parseUnits("150", 18)
-    );
+    expect(Number(await dai.balanceOf(dsaAddress))).to.eq(Number(DAI_150));
 
     console.log("Vault setup with 150 DAI Debt");
   });
@@ -288,7 +248,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
       data: await bre.run("abi-encode-with-selector", {
         abi: ConnectCompound.abi,
         functionName: "borrow",
-        inputs: [bre.network.config.DAI, DAI_150, "534", 0], //TODO: use saved withdrawn amount and save it with setId
+        inputs: [bre.network.config.DAI, dsaSdk.maxValue, "534", 0], //TODO: use saved withdrawn amount and save it with setId
       }),
       operation: GelatoCoreLib.Operation.Delegatecall,
     });

@@ -202,14 +202,14 @@ describe("Move DAI Debt from Maker to Compound", function () {
       userAddress
     );
 
-    // Check that 10 eth was trasnfered to the vault
-    expect(await ethers.provider.getBalance(dsaAddress)).to.be.equal(ETH_10);
+    // Check that 10 eth was trasnfered to the vaultv
+    expect(Number(await ethers.provider.getBalance(dsaAddress))).to.be.equal(
+      Number(ETH_10)
+    );
 
     // Check that user's dsa received 150 DAI
     dai = await ethers.getContractAt(IERC20.abi, bre.network.config.DAI);
-    expect(await dai.balanceOf(dsaAddress)).to.eq(
-      ethers.utils.parseUnits("150", 18)
-    );
+    expect(Number(await dai.balanceOf(dsaAddress))).to.eq(Number(DAI_150));
 
     console.log("Vault setup with 150 DAI Debt");
   });
@@ -295,7 +295,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
       data: await bre.run("abi-encode-with-selector", {
         abi: ConnectCompound.abi,
         functionName: "borrow",
-        inputs: [bre.network.config.DAI, DAI_150, "534", 0], //TODO: use saved withdrawn amount and save it with setId
+        inputs: [bre.network.config.DAI, dsaSdk.maxValue, "534", 0], //TODO: use saved withdrawn amount and save it with setId
       }),
       operation: GelatoCoreLib.Operation.Delegatecall,
     });
