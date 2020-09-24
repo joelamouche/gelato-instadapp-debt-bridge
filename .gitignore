@@ -15,4 +15,6 @@ cache/
 # yarn
 yarn-error.log
 
-**/*.js
+# vim 
+**/*.swp
+**/*.swo

@@ -3,8 +3,8 @@ import Web3 from "web3";
 import { constants } from "../constants/constants";
 
 // Contracts
-const InstaIndex = require("../pre-compiles/InstaIndex.json");
-const InstaList = require("../pre-compiles/InstaList.json");
+const InstaIndex = require("../../pre-compiles/InstaIndex.json");
+const InstaList = require("../../pre-compiles/InstaList.json");
 
 export async function createDSA(web3: Web3): Promise<string> {
   //setup ethers
