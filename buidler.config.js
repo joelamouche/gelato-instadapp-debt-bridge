@@ -10,9 +10,6 @@ const INFURA_ID = process.env.INFURA_ID;
 const INFURA_PRIVATE_KEY = process.env.INFURA_PRIVATE_KEY;
 assert.ok(INFURA_ID, "no Infura ID in process.env");
 
-//const INSTA_MASTER = "0xfCD22438AD6eD564a1C26151Df73F6B33B817B56"; 
-const INSTA_MASTER = "0xb1DC62EC38E6E3857a887210C38418E4A17Da5B2";
-
 // ================================= CONFIG =========================================
 module.exports = {
   defaultNetwork: "ganache",
@@ -21,22 +18,21 @@ module.exports = {
       // Standard config
       url: "http://localhost:8545",
       fork: `https://:${INFURA_PRIVATE_KEY}@mainnet.infura.io/v3/${INFURA_ID}`,
-      // unlocked_accounts: [INSTA_MASTER],
       // Custom
       GelatoCore: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8",
-      InstaMaster: INSTA_MASTER,
       InstaIndex: "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723",
       InstaList: "0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb",
       InstaConnectors: "0xD6A602C01a023B98Ecfb29Df02FBA380d3B21E0c",
       InstaAccount: "0x939Daad09fC4A9B8f8A9352A485DAb2df4F4B3F8",
-      ConnectAuth: "0xd1aFf9f2aCf800C876c409100D6F39AEa93Fc3D9",
-      ConnectBasic: "0x6a31c5982C5Bc5533432913cf06a66b6D3333a95",
-      ConnectMaker: "0xac02030d8a8F49eD04b2f52C394D3F901A10F8A9",
-      ConnectCompound: "0x07F81230d73a78f63F0c2A3403AD281b067d28F8",
+      ConnectAuth: "0xB3242e09C8E5cE6E14296b3d3AbC4C6965F49b98",
+      ConnectBasic: "0x9370236a085A99Aa359f4bD2f0424b8c3bf25C99",
+      ConnectMaker: "0x58Bbb677296B6d1B596288B31Abb928492400fBF",
+      ConnectCompound: "0xaeCfA2c0f4bAD0Ecee46dcd1250cd0334fE28BC0",
       DAI: "0x6b175474e89094c44da98b954eedeac495271d0f",
       DAI_UNISWAP: "0x2a1530C4C41db0B0b2bB646CB5Eb1A67b7158667",
       CDAI: "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
       ConnectGelato: "0x37A7009d424951dd5D5F155fA588D9a03C455163",
+      ConnectInstaPool: "0x6d11A71575C34eB7b5E22949fAfCd49A2FA2A8F9",
     },
   },
   solc: {
@@ -51,14 +47,14 @@ usePlugin("@nomiclabs/buidler-ganache");
 usePlugin("@nomiclabs/buidler-waffle");
 
 // ================================= TASKS =========================================
-task("abi-encode-withselector")
+task("abi-encode-with-selector")
   .addPositionalParam(
     "abi",
     "Contract ABI in array form",
     undefined,
     types.json
   )
-  .addPositionalParam("functionname")
+  .addPositionalParam("functionName")
   .addOptionalVariadicPositionalParam(
     "inputs",
     "Array of function params",
@@ -71,16 +67,16 @@ task("abi-encode-withselector")
       if (taskArgs.log) console.log(taskArgs);
 
       if (!taskArgs.abi)
-        throw new Error("abi-encode-withselector: no abi passed");
+        throw new Error("abi-encode-with-selector: no abi passed");
 
       const interFace = new utils.Interface(taskArgs.abi);
 
       let functionFragment;
       try {
-        functionFragment = interFace.getFunction(taskArgs.functionname);
+        functionFragment = interFace.getFunction(taskArgs.functionName);
       } catch (error) {
         throw new Error(
-          `\n ❌ abi-encode-withselector: functionname "${taskArgs.functionname}" not found`
+          `\n ❌ abi-encode-with-selector: functionName "${taskArgs.functionName}" not found`
         );
       }
 
