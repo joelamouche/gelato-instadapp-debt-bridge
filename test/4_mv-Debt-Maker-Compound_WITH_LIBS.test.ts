@@ -12,6 +12,7 @@ const GelatoCoreLib = require("@gelatonetwork/core");
 const { BigNumber } = require("ethers");
 const DSA = require("dsa-sdk");
 const Web3 = require("web3");
+import { constants } from "../constants/constants";
 export {};
 
 // Set up dsa sdk from instaDapp to get resolvers
@@ -26,8 +27,6 @@ const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 // Contracts
 const InstaAccount = require("../pre-compiles/InstaAccount.json");
 const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
-const ConnectMaker = require("../pre-compiles/ConnectMaker.json");
-const ConnectCompound = require("../pre-compiles/ConnectCompound.json");
 const IERC20 = require("../pre-compiles/IERC20.json");
 const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.json");
 
@@ -72,7 +71,7 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
     // ===== GELATO SETUP ==================
     gelatoCore = await ethers.getContractAt(
       GelatoCoreLib.GelatoCore.abi,
-      bre.network.config.GelatoCore
+      constants.GelatoCore
     );
 
     // Add GelatoCore as auth on InstaDapp DSA
@@ -81,24 +80,20 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
       functionName: "add",
       inputs: [gelatoCore.address],
     });
-    await dsa.cast(
-      [bre.network.config.ConnectAuth],
-      [addAuthData],
-      userAddress
-    );
+    await dsa.cast([constants.ConnectAuth], [addAuthData], userAddress);
     expect(await dsa.isAuth(gelatoCore.address)).to.be.true;
 
     // Instantiate ConnectGelato from mainnet
     connectGelato = await ethers.getContractAt(
       ConnectGelato_ABI,
-      bre.network.config.ConnectGelato
+      constants.ConnectGelato
     );
 
     // get DSA from mainnet
     providerModuleDSA = await ethers.getContractAt(
       ProviderModuleDSA_ABI,
       //@ts-ignore
-      bre.network.config.ProviderModuleDSA
+      constants.ProviderModuleDSA
     );
 
     // Deploy Mocks for Testing
@@ -139,13 +134,13 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
     );
 
     // Check that user's dsa received 150 DAI
-    dai = await ethers.getContractAt(IERC20.abi, bre.network.config.DAI);
+    dai = await ethers.getContractAt(IERC20.abi, constants.DAI);
     expect(Number(await dai.balanceOf(dsaAddress))).to.eq(Number(DAI_150));
 
     console.log("Vault setup with 150 DAI Debt");
   });
 
-  it("#1: Gelato refinances DAI from DSR=>Compound, if better rate", async function () {
+  it("#1: Gelato refinances DAI from Maker vault=>Compound, if better rate", async function () {
     // ======= Condition setup ======
     // We instantiate the Rebalance Condition:
     // Compound APY needs to be 10000000 per second points higher than DSR
@@ -188,7 +183,7 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
       await gelatoCore.isModuleProvided(
         dsa.address,
         // @ts-ignore
-        bre.network.config.ProviderModuleDSA
+        constants.ProviderModuleDSA
       )
     ).to.be.true;
 

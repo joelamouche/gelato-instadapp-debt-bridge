@@ -1,6 +1,6 @@
 import { Contract, ethers } from "ethers";
 import Web3 from "web3";
-import bre from "@nomiclabs/buidler";
+import { constants } from "../constants/constants";
 
 // Contracts
 const InstaIndex = require("../pre-compiles/InstaIndex.json");
@@ -14,13 +14,13 @@ export async function createDSA(web3: Web3): Promise<string> {
 
   const instaIndex = new Contract(
     //@ts-ignore
-    bre.network.config.InstaIndex,
+    constants.InstaIndex,
     InstaIndex.abi,
     userWallet
   );
   const instaList = new Contract(
     //@ts-ignore
-    bre.network.config.InstaList,
+    constants.InstaList,
     InstaList.abi,
     userWallet
   );

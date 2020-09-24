@@ -1,10 +1,10 @@
-import { ethers, BigNumber, Contract, utils } from "ethers";
+import { ethers, BigNumber, Contract } from "ethers";
+import { abiEncodeWithSelector } from "./utils/abiEncodeWithSelector";
+import Web3 from "web3";
+import { constants } from "../constants/constants";
 
-const bre = require("@nomiclabs/buidler");
 const GelatoCoreLib = require("@gelatonetwork/core");
 const DSA = require("dsa-sdk");
-import Web3 from "web3";
-import { IGelatoCore } from "../typechain/IGelatoCore";
 
 // Constants
 const ETH_Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
@@ -16,6 +16,8 @@ const ConnectMaker = require("../pre-compiles/ConnectMaker.json");
 const ConnectCompound = require("../pre-compiles/ConnectCompound.json");
 const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
 const ConditionCompareUintsFromTwoSources = require("../artifacts/ConditionCompareUintsFromTwoSources.json");
+const MockCDAI = require("../artifacts/MockCDAI.json");
+const MockDSR = require("../artifacts/MockDSR.json");
 
 const ConnectGelato_ABI = require("../pre-compiles/ConnectGelato_ABI");
 
@@ -44,10 +46,11 @@ export async function createGelatoOptimizer(
 
   // Instantiate Contracts
   gelatoCore = new Contract(
-    bre.network.config.GelatoCore,
+    constants.GelatoCore,
     GelatoCoreLib.GelatoCore.abi,
     userWallet
   );
+
   dsa = new Contract(dsaAddress, InstaAccount.abi, userWallet);
   conditionCompareUints = new Contract(
     conditionAddress,
@@ -59,16 +62,10 @@ export async function createGelatoOptimizer(
   if (
     !(await dsaSdk.getAuthByAddress(dsaAddress)).includes(gelatoCore.address)
   ) {
-    const addAuthData = await bre.run("abi-encode-with-selector", {
-      abi: ConnectAuth.abi,
-      functionName: "add",
-      inputs: [gelatoCore.address],
-    });
-    await dsa.cast(
-      [bre.network.config.ConnectAuth],
-      [addAuthData],
-      userAddress
-    );
+    const addAuthData = abiEncodeWithSelector(ConnectAuth.abi, "add", [
+      gelatoCore.address,
+    ]);
+    await dsa.cast([constants.ConnectAuth], [addAuthData], userAddress);
   }
 
   // ======= Condition setup ======
@@ -80,14 +77,8 @@ export async function createGelatoOptimizer(
     data: await conditionCompareUints.getConditionData(
       mockCDAIAddress, // We are in DSR so we compare against CDAI => SourceA=CDAI
       mockDSRAddress, // SourceB=DSR
-      await bre.run("abi-encode-with-selector", {
-        abi: require("../artifacts/MockCDAI.json").abi,
-        functionName: "supplyRatePerSecond",
-      }), // CDAI data feed first (sourceAData)
-      await bre.run("abi-encode-with-selector", {
-        abi: require("../artifacts/MockDSR.json").abi,
-        functionName: "dsr",
-      }), // DSR data feed second (sourceBData)
+      abiEncodeWithSelector(MockCDAI.abi, "supplyRatePerSecond"), // CDAI data feed first (sourceAData)
+      abiEncodeWithSelector(MockDSR.abi, "dsr"), // DSR data feed second (sourceBData)
       MIN_SPREAD
     ),
   });
@@ -98,48 +89,48 @@ export async function createGelatoOptimizer(
 
   // Payback Maker Vault with 150 DAI
   const connectorPaybackMakerVault = new GelatoCoreLib.Action({
-    addr: bre.network.config.ConnectMaker,
-    data: await bre.run("abi-encode-with-selector", {
-      abi: ConnectMaker.abi,
-      functionName: "payback",
-      inputs: [0, dsaSdk.maxValue, 0, "534"], //TODO: use max payback and save it with setId
-    }),
+    addr: constants.ConnectMaker,
+    data: abiEncodeWithSelector(
+      ConnectMaker.abi,
+      "payback",
+      [0, dsaSdk.maxValue, 0, "534"] //TODO: use max payback and save it with setId
+    ),
     operation: GelatoCoreLib.Operation.Delegatecall,
   });
   spells.push(connectorPaybackMakerVault);
 
   // Withdraw ETH from Vault
   const connectorWithdrawFromMakerVault = new GelatoCoreLib.Action({
-    addr: bre.network.config.ConnectMaker,
-    data: await bre.run("abi-encode-with-selector", {
-      abi: ConnectMaker.abi,
-      functionName: "withdraw",
-      inputs: [0, dsaSdk.maxValue, 0, "987"], //TODO: use max withdraw and save it with setId
-    }),
+    addr: constants.ConnectMaker,
+    data: abiEncodeWithSelector(
+      ConnectMaker.abi,
+      "withdraw",
+      [0, dsaSdk.maxValue, 0, "987"] //TODO: use max withdraw and save it with setId
+    ),
     operation: GelatoCoreLib.Operation.Delegatecall,
   });
   spells.push(connectorWithdrawFromMakerVault);
 
   // Deposit ETH into Compound Vault
   const connectorDepositIntoCompound = new GelatoCoreLib.Action({
-    addr: bre.network.config.ConnectCompound,
-    data: await bre.run("abi-encode-with-selector", {
-      abi: ConnectCompound.abi,
-      functionName: "deposit",
-      inputs: [ETH_Address, eth_amount, "987", 0], //TODO: use saved withdrawn amount and save it with setId
-    }),
+    addr: constants.ConnectCompound,
+    data: abiEncodeWithSelector(
+      ConnectCompound.abi,
+      "deposit",
+      [ETH_Address, eth_amount, "987", 0] //TODO: use saved withdrawn amount and save it with setId
+    ),
     operation: GelatoCoreLib.Operation.Delegatecall,
   });
   spells.push(connectorDepositIntoCompound);
 
   // Borrow DAI from Compound vault
   const connectorBorrowFromCompound = new GelatoCoreLib.Action({
-    addr: bre.network.config.ConnectCompound,
-    data: await bre.run("abi-encode-with-selector", {
-      abi: ConnectCompound.abi,
-      functionName: "borrow",
-      inputs: [bre.network.config.DAI, dsaSdk.maxValue, "534", 0], //TODO: use saved withdrawn amount and save it with setId
-    }),
+    addr: constants.ConnectCompound,
+    data: abiEncodeWithSelector(
+      ConnectCompound.abi,
+      "borrow",
+      [constants.DAI, dsaSdk.maxValue, "534", 0] //TODO: use saved withdrawn amount and save it with setId
+    ),
     operation: GelatoCoreLib.Operation.Delegatecall,
   });
   spells.push(connectorBorrowFromCompound);
@@ -172,7 +163,7 @@ export async function createGelatoOptimizer(
   const gelatoSelfProvider = new GelatoCoreLib.GelatoProvider({
     addr: dsaAddress,
     //@ts-ignore
-    module: bre.network.config.ProviderModuleDSA,
+    module: constants.ProviderModuleDSA,
   });
 
   // ======= Executor Setup =========
@@ -196,21 +187,17 @@ export async function createGelatoOptimizer(
 
   await dsa.cast(
     //@ts-ignore
-    [bre.network.config.ConnectGelato], // targets
+    [constants.ConnectGelato], // targets
     [
-      await bre.run("abi-encode-with-selector", {
-        abi: ConnectGelato_ABI,
-        functionName: "multiProvide",
-        inputs: [
-          userAddress,
-          [],
-          //@ts-ignore
-          [bre.network.config.ProviderModuleDSA],
-          TASK_AUTOMATION_FUNDS,
-          0,
-          0,
-        ],
-      }),
+      abiEncodeWithSelector(ConnectGelato_ABI, "multiProvide", [
+        userAddress,
+        [],
+        //@ts-ignore
+        [constants.ProviderModuleDSA],
+        TASK_AUTOMATION_FUNDS,
+        0,
+        0,
+      ]),
     ], // datas
     userAddress, // origin
     {
@@ -225,17 +212,13 @@ export async function createGelatoOptimizer(
   const expiryDate = 0;
   await dsa.cast(
     //@ts-ignore
-    [bre.network.config.ConnectGelato], // targets
+    [constants.ConnectGelato], // targets
     [
-      await bre.run("abi-encode-with-selector", {
-        abi: ConnectGelato_ABI,
-        functionName: "submitTask",
-        inputs: [
-          gelatoSelfProvider,
-          taskRefinanceMakerToCompoundIfBetter,
-          expiryDate,
-        ],
-      }),
+      abiEncodeWithSelector(ConnectGelato_ABI, "submitTask", [
+        gelatoSelfProvider,
+        taskRefinanceMakerToCompoundIfBetter,
+        expiryDate,
+      ]),
     ], // datas
     userAddress, // origin
     {
@@ -249,7 +232,7 @@ export async function createGelatoOptimizer(
   const taskReceiptId = await gelatoCore.currentTaskReceiptId();
   return new GelatoCoreLib.TaskReceipt({
     id: taskReceiptId,
-    userProxy: dsa.address,
+    userProxy: dsaAddress,
     provider: gelatoSelfProvider,
     tasks: [taskRefinanceMakerToCompoundIfBetter],
     expiryDate,

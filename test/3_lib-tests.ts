@@ -6,6 +6,7 @@ import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
 import { createMakerVault } from "../lib/createMakerVault";
 import { AccountInterface } from "../typechain/AccountInterface";
 import { Ierc20 } from "../typechain/Ierc20";
+import { constants } from "../constants/constants";
 const GelatoCoreLib = require("@gelatonetwork/core");
 
 // => only dependency we need is "chai"
@@ -43,7 +44,7 @@ describe("Test Lib functions", function () {
     it("creates a DSA", async () => {
       const instaList = await ethers.getContractAt(
         InstaList.abi,
-        bre.network.config.InstaList
+        constants.InstaList
       );
       const dsaIDPrevious = await instaList.accounts();
       dsaAddress = await createDSA(web3);
@@ -93,7 +94,7 @@ describe("Test Lib functions", function () {
         initialWalletBalance.sub(ETH_10)
       );
       // Check that user's dsa received 150 DAI
-      dai = await ethers.getContractAt(IERC20.abi, bre.network.config.DAI);
+      dai = await ethers.getContractAt(IERC20.abi, constants.DAI);
       expect(await dai.balanceOf(dsaAddress)).to.eq(
         ethers.utils.parseUnits("150", 18)
       );
@@ -130,7 +131,7 @@ describe("Test Lib functions", function () {
       // ===== GELATO SETUP for testing ==================
       gelatoCore = await ethers.getContractAt(
         GelatoCoreLib.GelatoCore.abi,
-        bre.network.config.GelatoCore
+        constants.GelatoCore
       );
 
       // Deploy Gelato Conditions for Testing
@@ -147,6 +148,7 @@ describe("Test Lib functions", function () {
       // deploy Maker vault for user
       await createMakerVault(web3, dsaAddress, ETH_10, DAI_150);
     });
+
     it("creates a Gelato optimizer for the latest Maker Vault", async () => {
       // ======= Condition setup ======
       // We instantiate the Rebalance Condition:
@@ -190,7 +192,7 @@ describe("Test Lib functions", function () {
         await gelatoCore.isModuleProvided(
           dsaAddress,
           // @ts-ignore
-          bre.network.config.ProviderModuleDSA
+          constants.ProviderModuleDSA
         )
       ).to.be.true;
 
@@ -222,6 +224,7 @@ describe("Test Lib functions", function () {
       await mockCDAI.setSupplyRatePerSecond(
         (await mockDSR.dsr()).add(MIN_SPREAD)
       );
+
       expect(
         await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
       ).to.be.equal("OK");

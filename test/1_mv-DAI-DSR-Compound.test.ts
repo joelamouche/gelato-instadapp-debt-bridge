@@ -3,7 +3,7 @@
 import { expect } from "chai";
 import bre from "@nomiclabs/buidler";
 const GelatoCoreLib = require("@gelatonetwork/core");
-const { sleep } = GelatoCoreLib;
+import { constants } from "../constants/constants";
 
 declare var ethers;
 
@@ -67,22 +67,22 @@ describe("Move DAI lending from DSR to Compound", function () {
     const instaIndex = await ethers.getContractAt(
       InstaIndex.abi,
       // @ts-ignore
-      bre.network.config.InstaIndex
+      constants.InstaIndex
     );
     const instaList = await ethers.getContractAt(
       InstaList.abi,
       // @ts-ignore
-      bre.network.config.InstaList
+      constants.InstaList
     );
     connectMaker = await ethers.getContractAt(
       ConnectMaker.abi,
       // @ts-ignore
-      bre.network.config.ConnectMaker
+      constants.ConnectMaker
     );
     connectCompound = await ethers.getContractAt(
       ConnectCompound.abi,
       // @ts-ignore
-      bre.network.config.ConnectCompound
+      constants.ConnectCompound
     );
 
     // Deploy DSA and get and verify ID of newly deployed DSA
@@ -103,7 +103,7 @@ describe("Move DAI lending from DSR to Compound", function () {
     gelatoCore = await ethers.getContractAt(
       GelatoCoreLib.GelatoCore.abi,
       // @ts-ignore
-      bre.network.config.GelatoCore
+      constants.GelatoCore
     );
 
     // Add GelatoCore as auth on DSA
@@ -114,7 +114,7 @@ describe("Move DAI lending from DSR to Compound", function () {
     });
     await dsa.cast(
       // @ts-ignore
-      [bre.network.config.ConnectAuth],
+      [constants.ConnectAuth],
       [addAuthData],
       userAddress
     );
@@ -124,14 +124,14 @@ describe("Move DAI lending from DSR to Compound", function () {
     connectGelato = await ethers.getContractAt(
       ConnectGelato_ABI,
       // @ts-ignore
-      bre.network.config.ConnectGelato
+      constants.ConnectGelato
     );
 
     // get DSA from mainnet
     providerModuleDSA = await ethers.getContractAt(
       ProviderModuleDSA_ABI,
       //@ts-ignore
-      bre.network.config.ProviderModuleDSA
+      constants.ProviderModuleDSA
     );
 
     // Deploy Mocks for Testing
@@ -153,7 +153,7 @@ describe("Move DAI lending from DSR to Compound", function () {
     // ===== Dapp Dependencies SETUP ==================
     // This test assumes our user has 100 DAI deposited in Maker DSR
     // @ts-ignore
-    dai = await ethers.getContractAt(IERC20.abi, bre.network.config.DAI);
+    dai = await ethers.getContractAt(IERC20.abi, constants.DAI);
     expect(await dai.balanceOf(userAddress)).to.be.equal(0);
 
     // Let's get the test user 100 DAI++ from Uniswap
@@ -161,7 +161,7 @@ describe("Move DAI lending from DSR to Compound", function () {
     const daiUniswapExchange = await ethers.getContractAt(
       IUniswapExchange.abi,
       // @ts-ignore
-      bre.network.config.DAI_UNISWAP
+      constants.DAI_UNISWAP
     );
     await daiUniswapExchange.ethToTokenTransferInput(
       1,
@@ -186,7 +186,7 @@ describe("Move DAI lending from DSR to Compound", function () {
 
     await expect(
       // @ts-ignore
-      dsa.cast([bre.network.config.ConnectMaker], [depositDai], userAddress)
+      dsa.cast([constants.ConnectMaker], [depositDai], userAddress)
     )
       //@ts-ignore
       .to.emit(dsa, "LogCast")
@@ -273,7 +273,7 @@ describe("Move DAI lending from DSR to Compound", function () {
     const gelatoSelfProvider = new GelatoCoreLib.GelatoProvider({
       addr: dsa.address,
       //@ts-ignore
-      module: bre.network.config.ProviderModuleDSA,
+      module: constants.ProviderModuleDSA,
     });
 
     // ======= Executor Setup =========
@@ -298,7 +298,7 @@ describe("Move DAI lending from DSR to Compound", function () {
 
     await dsa.cast(
       //@ts-ignore
-      [bre.network.config.ConnectGelato], // targets
+      [constants.ConnectGelato], // targets
       [
         await bre.run("abi-encode-with-selector", {
           abi: ConnectGelato_ABI,
@@ -307,7 +307,7 @@ describe("Move DAI lending from DSR to Compound", function () {
             userAddress,
             [],
             //@ts-ignore
-            [bre.network.config.ProviderModuleDSA],
+            [constants.ProviderModuleDSA],
             TASK_AUTOMATION_FUNDS,
             0,
             0,
@@ -334,7 +334,7 @@ describe("Move DAI lending from DSR to Compound", function () {
       await gelatoCore.isModuleProvided(
         dsa.address,
         // @ts-ignore
-        bre.network.config.ProviderModuleDSA
+        constants.ProviderModuleDSA
       )
     ).to.be.true;
 
@@ -423,7 +423,7 @@ describe("Move DAI lending from DSR to Compound", function () {
     const cDAI = await ethers.getContractAt(
       IERC20.abi,
       // @ts-ignore
-      bre.network.config.CDAI
+      constants.CDAI
     );
 
     const dsaCDAIBefore = await cDAI.balanceOf(dsa.address);
