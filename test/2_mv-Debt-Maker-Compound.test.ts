@@ -214,7 +214,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
     console.log("Vault setup with 150 DAI Debt");
   });
 
-  it("#1: Gelato refinances DAI from DSR=>Compound, if better rate", async function () {
+  it("#1: Gelato refinances DAI from Maker vault=>Compound, if better rate", async function () {
     // ======= Condition setup ======
     // We instantiate the Rebalance Condition:
     // Compound APY needs to be 10000000 per second points higher than DSR
