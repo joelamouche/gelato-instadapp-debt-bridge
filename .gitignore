@@ -14,5 +14,3 @@ cache/
 
 # yarn
 yarn-error.log
-
-**/*.js
