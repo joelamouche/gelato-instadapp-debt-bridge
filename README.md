@@ -27,7 +27,7 @@ The second iteration, written for the ChainLink hackathon 2020, implements a **D
 For example, if the ETHDAI price is 300, and I deposit 10ETH in a Maker Vault, I can borrow 300 x 10 x 0.666 = 2000 DAI. This costs a yearly rate.
 Now if Compound offers a better rate for the same financial product, I might want to move my borrow position to a Compound vault.
 
-A **Debt Bridge** uses a [Gelato Automation](https://gelato.network/) to automatically refinance a Maker Vault to a Compound position (and vice versa), depending which is the most profitable for the user.
+A **Debt Bridge** uses a [Gelato Automation](https://gelato.network/) to **automatically refinance a Maker Vault to a Compound position (and vice versa), depending which is the most profitable for the user**.
 
 This reuses two existing deployed InstaDapp Connectors (ConnectMaker and ConnectCompound) to provision Gelato with a refinancing sequence, that would only be triggered if one is better than the other.
 
@@ -44,6 +44,8 @@ An interface for that can be found [here](https://dsa.instadapp.io/recipe/refina
 <p  align="center">
     <img  src="assets/instadapp-refinance.png"  width="400px"/>
 </p>
+
+The difference is that thanks to Gelato, someone deploying a vault from our interface wouldn't need to refinance manually, as **Gelato executors will trigger the call when the conditions are met**.
 
 
 ### Testing
