@@ -12,15 +12,15 @@ export {};
 const ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
 // Contracts
-const InstaIndex = require("../pre-compiles/InstaIndex.json");
-const InstaList = require("../pre-compiles/InstaList.json");
-const InstaConnectors = require("../pre-compiles/InstaConnectors.json");
-const InstaAccount = require("../pre-compiles/InstaAccount.json");
-const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
-const ConnectBasic = require("../pre-compiles/ConnectBasic.json");
-const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.json");
+const InstaIndex = require("../../pre-compiles/InstaIndex.json");
+const InstaList = require("../../pre-compiles/InstaList.json");
+const InstaConnectors = require("../../pre-compiles/InstaConnectors.json");
+const InstaAccount = require("../../pre-compiles/InstaAccount.json");
+const ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
+const ConnectBasic = require("../../pre-compiles/ConnectBasic.json");
+const ProviderModuleDSA_ABI = require("../../pre-compiles/ProviderModuleDSA_ABI.json");
 
-const ConnectGelato = require("../artifacts/ConnectGelato");
+const ConnectGelato = require("../../artifacts/ConnectGelato");
 
 describe("DSA setup with Gelato Tests", function () {
   this.timeout(50000);

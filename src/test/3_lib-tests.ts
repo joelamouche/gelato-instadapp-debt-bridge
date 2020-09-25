@@ -4,8 +4,8 @@ import { BigNumber } from "ethers";
 import { createDSA } from "../lib/createDSA";
 import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
 import { createMakerVault } from "../lib/createMakerVault";
-import { AccountInterface } from "../typechain/AccountInterface";
-import { Ierc20 } from "../typechain/Ierc20";
+import { AccountInterface } from "../../typechain/AccountInterface";
+import { Ierc20 } from "../../typechain/Ierc20";
 import { constants } from "../constants/constants";
 const GelatoCoreLib = require("@gelatonetwork/core");
 
@@ -17,15 +17,15 @@ const Web3 = require("web3");
 const DSA = require("dsa-sdk");
 export {};
 
-const IERC20 = require("../pre-compiles/IERC20.json");
+const IERC20 = require("../../pre-compiles/IERC20.json");
 
 // Set up dsa sdk from instaDapp to get resolvers
 const web3 = new Web3("http://localhost:8545");
 const dsaSdk = new DSA(web3);
 
 // Contracts
-const InstaList = require("../pre-compiles/InstaList.json");
-const InstaAccount = require("../pre-compiles/InstaAccount.json");
+const InstaList = require("../../pre-compiles/InstaList.json");
+const InstaAccount = require("../../pre-compiles/InstaAccount.json");
 
 const ETH_10 = ethers.utils.parseEther("10");
 const DAI_150 = ethers.utils.parseUnits("150", 18);

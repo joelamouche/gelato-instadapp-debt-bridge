@@ -11,7 +11,7 @@ const assert = require("assert");
 const { utils } = require("ethers");
 
 const GelatoCoreLib = require("@gelatonetwork/core");
-import { constants } from "./constants/constants";
+import { constants } from "./src/constants/constants";
 
 // Process Env Variables
 require("dotenv").config();
@@ -38,6 +38,9 @@ const config: BuidlerConfig = {
   typechain: {
     outDir: "typechain",
     target: "ethers-v4",
+  },
+  paths: {
+    tests: "./src/test",
   },
 };
 export default config;

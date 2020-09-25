@@ -4,8 +4,8 @@ import Web3 from "web3";
 import { abiEncodeWithSelector } from "./utils/abiEncodeWithSelector";
 import { constants } from "../constants/constants";
 
-const ConnectMaker = require("../pre-compiles/ConnectMaker.json");
-const InstaAccount = require("../pre-compiles/InstaAccount.json");
+const ConnectMaker = require("../../pre-compiles/ConnectMaker.json");
+const InstaAccount = require("../../pre-compiles/InstaAccount.json");
 
 export async function createMakerVault(
   web3: Web3,

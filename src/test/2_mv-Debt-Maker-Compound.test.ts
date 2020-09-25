@@ -21,17 +21,17 @@ const DAI_150 = ethers.utils.parseUnits("150", 18);
 const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 
 // Contracts
-const InstaIndex = require("../pre-compiles/InstaIndex.json");
-const InstaList = require("../pre-compiles/InstaList.json");
-const InstaAccount = require("../pre-compiles/InstaAccount.json");
-const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
-const ConnectMaker = require("../pre-compiles/ConnectMaker.json");
-const ConnectInstaPool = require("../pre-compiles/ConnectInstaPool.json");
-const ConnectCompound = require("../pre-compiles/ConnectCompound.json");
-const IERC20 = require("../pre-compiles/IERC20.json");
-const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.json");
+const InstaIndex = require("../../pre-compiles/InstaIndex.json");
+const InstaList = require("../../pre-compiles/InstaList.json");
+const InstaAccount = require("../../pre-compiles/InstaAccount.json");
+const ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
+const ConnectMaker = require("../../pre-compiles/ConnectMaker.json");
+const ConnectInstaPool = require("../../pre-compiles/ConnectInstaPool.json");
+const ConnectCompound = require("../../pre-compiles/ConnectCompound.json");
+const IERC20 = require("../../pre-compiles/IERC20.json");
+const ProviderModuleDSA_ABI = require("../../pre-compiles/ProviderModuleDSA_ABI.json");
 
-const ConnectGelato_ABI = require("../pre-compiles/ConnectGelato_ABI");
+const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 
 describe("Move DAI Debt from Maker to Compound", function () {
   this.timeout(0);

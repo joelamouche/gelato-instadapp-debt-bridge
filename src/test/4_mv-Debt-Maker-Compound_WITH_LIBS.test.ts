@@ -25,12 +25,12 @@ const DAI_150 = ethers.utils.parseUnits("150", 18);
 const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 
 // Contracts
-const InstaAccount = require("../pre-compiles/InstaAccount.json");
-const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
-const IERC20 = require("../pre-compiles/IERC20.json");
-const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.json");
+const InstaAccount = require("../../pre-compiles/InstaAccount.json");
+const ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
+const IERC20 = require("../../pre-compiles/IERC20.json");
+const ProviderModuleDSA_ABI = require("../../pre-compiles/ProviderModuleDSA_ABI.json");
 
-const ConnectGelato_ABI = require("../pre-compiles/ConnectGelato_ABI");
+const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 
 describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
   this.timeout(0);

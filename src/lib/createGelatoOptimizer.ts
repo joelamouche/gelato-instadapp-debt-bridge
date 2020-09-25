@@ -11,15 +11,15 @@ const ETH_Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 
 // Contracts
-const InstaAccount = require("../pre-compiles/InstaAccount.json");
-const ConnectMaker = require("../pre-compiles/ConnectMaker.json");
-const ConnectCompound = require("../pre-compiles/ConnectCompound.json");
-const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
-const ConditionCompareUintsFromTwoSources = require("../artifacts/ConditionCompareUintsFromTwoSources.json");
-const MockCDAI = require("../artifacts/MockCDAI.json");
-const MockDSR = require("../artifacts/MockDSR.json");
+const InstaAccount = require("../../pre-compiles/InstaAccount.json");
+const ConnectMaker = require("../../pre-compiles/ConnectMaker.json");
+const ConnectCompound = require("../../pre-compiles/ConnectCompound.json");
+const ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
+const ConditionCompareUintsFromTwoSources = require("../../artifacts/ConditionCompareUintsFromTwoSources.json");
+const MockCDAI = require("../../artifacts/MockCDAI.json");
+const MockDSR = require("../../artifacts/MockDSR.json");
 
-const ConnectGelato_ABI = require("../pre-compiles/ConnectGelato_ABI");
+const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 
 // requires the user to have an open Maker Vault
 // NB: it requires mock contract addresses for now but will use actual maker and compound deployed contract in next iteration
