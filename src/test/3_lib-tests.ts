@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers";
+import { BigNumber, Contract } from "ethers";
 // running `npx buidler test` automatically makes use of buidler-waffle plugin
 
 import { createDSA } from "../lib/createDSA";
@@ -15,9 +15,10 @@ const bre = require("@nomiclabs/buidler");
 const { ethers } = bre;
 const Web3 = require("web3");
 const DSA = require("dsa-sdk");
-export {};
+export { };
 
 const IERC20 = require("../../pre-compiles/IERC20.json");
+const ConnectBasic = require("../../pre-compiles/ConnectBasic.json");
 
 // Set up dsa sdk from instaDapp to get resolvers
 const web3 = new Web3("http://localhost:8545");
@@ -118,7 +119,7 @@ describe("Test Lib functions", function () {
     let conditionCompareUints;
     let gelatoCore;
 
-    before(async function () {
+    beforeEach(async function () {
       // Deploy Mocks for Testing
       const MockCDAI = await ethers.getContractFactory("MockCDAI");
       mockCDAI = await MockCDAI.deploy(APY_2_PERCENT_IN_SECONDS);
@@ -172,6 +173,7 @@ describe("Test Lib functions", function () {
         web3,
         dsaAddress,
         ETH_10,
+        DAI_150,
         mockCDAI.address,
         mockDSR.address,
         conditionCompareUints.address
@@ -249,6 +251,76 @@ describe("Test Lib functions", function () {
         debt = vault[key].debt;
       });
       expect(debt).to.eq(0);
+    });
+
+    it("refinancing shouldn't happen if not enough DAi in hte DSA", async () => {
+      // ======= Condition setup ======
+      // We instantiate the Rebalance Condition:
+      // Compound APY needs to be 10000000 per second points higher than DSR
+      const MIN_SPREAD = "10000000";
+
+      // ======= Gelato Task Setup =========
+      // For testing purpose
+      const GAS_LIMIT = "4000000";
+      const GAS_PRICE_CEIL = ethers.utils.parseUnits("1000", "gwei");
+
+      // ======= Gelato Task Provision =========
+      // For testing purpose
+      // const TASK_AUTOMATION_FUNDS = await gelatoCore.minExecProviderFunds(
+      //   GAS_LIMIT,
+      //   GAS_PRICE_CEIL
+      // );
+
+      // Create Gelato Optimizer
+      const taskReceipt = await createGelatoOptimizer(
+        web3,
+        dsaAddress,
+        ETH_10,
+        DAI_150,
+        mockCDAI.address,
+        mockDSR.address,
+        conditionCompareUints.address
+      );
+
+      // ======= 📣 TASK EXECUTION 📣 =========
+
+      // First we fetch the gelatoGasPrice as fed by ChainLink oracle. Gelato
+      // allows Users to specify a maximum fast gwei gas price for their Tasks
+      // to remain executable up until.
+      const gelatoGasPrice = await bre.run("fetchGelatoGasPrice");
+      expect(gelatoGasPrice).to.be.lte(GAS_PRICE_CEIL);
+
+      // We defined a MIN_SPREAD of 10000000 points in the per second rate
+      // for our ConditionCompareUintsFromTwoSources. So we now
+      // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+      // and expect it to mean that our Task becomes executable.
+      await mockCDAI.setSupplyRatePerSecond(
+        (await mockDSR.dsr()).add(MIN_SPREAD)
+      );
+
+      // Check that with 150 DAI, the task is executable
+      expect(
+        await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
+      ).to.be.equal("OK");
+
+      // Withdraw the DAI
+      const withdrawData = await bre.run("abi-encode-with-selector", {
+        abi: ConnectBasic.abi,
+        functionName: "withdraw",
+        inputs: [constants.DAI, DAI_150, userAddress, 0, 0],
+      });
+      let dsa = new Contract(dsaAddress, InstaAccount.abi, userWallet);
+      const gasLimit = ethers.BigNumber.from(1000000);
+      const gasPrice = ethers.utils.parseUnits("20", "gwei");
+      await dsa.cast([constants.ConnectBasic], [withdrawData], userAddress, {
+        gasLimit,
+        gasPrice,
+      })
+
+      // Now the task shouldn't be executable anymore
+      expect(
+        await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
+      ).to.be.equal("ConditionNotOk:NotOkERC20BalanceIsNotGreaterThanRefBalance");
     });
   });
 });

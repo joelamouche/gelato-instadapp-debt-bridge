@@ -20,6 +20,7 @@ const MockCDAI = require("../../artifacts/MockCDAI.json");
 const MockDSR = require("../../artifacts/MockDSR.json");
 
 const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
+const ConditionBalance_ABI = require("../../pre-compiles/ConditionBalance_ABI");
 
 // requires the user to have an open Maker Vault
 // NB: it requires mock contract addresses for now but will use actual maker and compound deployed contract in next iteration
@@ -28,6 +29,7 @@ export async function createGelatoOptimizer(
   web3: Web3,
   dsaAddress: string,
   eth_amount: BigNumber,
+  dai_amount: BigNumber,
   mockCDAIAddress: string,
   mockDSRAddress: string,
   conditionAddress: string
@@ -35,6 +37,7 @@ export async function createGelatoOptimizer(
   let gelatoCore; //: IGelatoCore;
   let dsa;
   let conditionCompareUints;
+  let conditionBalance;
 
   //setup ethers
   let provider = new ethers.providers.Web3Provider(web3.currentProvider as any);
@@ -50,11 +53,15 @@ export async function createGelatoOptimizer(
     GelatoCoreLib.GelatoCore.abi,
     userWallet
   );
-
   dsa = new Contract(dsaAddress, InstaAccount.abi, userWallet);
   conditionCompareUints = new Contract(
     conditionAddress,
     ConditionCompareUintsFromTwoSources.abi,
+    userWallet
+  );
+  conditionBalance = new Contract(
+    constants.ConditionBalance,
+    ConditionBalance_ABI,
     userWallet
   );
 
@@ -82,18 +89,28 @@ export async function createGelatoOptimizer(
       MIN_SPREAD
     ),
   });
+  //Check that user has 150 DAI on their dsa
+  const enoughDAICondition = new GelatoCoreLib.Condition({
+    inst: conditionBalance.address,
+    data: await conditionBalance.getConditionData(
+      dsaAddress,
+      constants.DAI,
+      dai_amount,
+      true
+    ),
+  });
 
   // ======= Action/Spells setup ======
   // To assimilate to DSA SDK
   const spells: any[] = [];
 
-  // Payback Maker Vault with 150 DAI
+  // Payback Maker Vault with all the DAI
   const connectorPaybackMakerVault = new GelatoCoreLib.Action({
     addr: constants.ConnectMaker,
     data: abiEncodeWithSelector(
       ConnectMaker.abi,
       "payback",
-      [0, dsaSdk.maxValue, 0, "534"] //TODO: use max payback and save it with setId
+      [0, dai_amount, 0, 0]
     ),
     operation: GelatoCoreLib.Operation.Delegatecall,
   });
@@ -105,7 +122,7 @@ export async function createGelatoOptimizer(
     data: abiEncodeWithSelector(
       ConnectMaker.abi,
       "withdraw",
-      [0, dsaSdk.maxValue, 0, "987"] //TODO: use max withdraw and save it with setId
+      [0, dsaSdk.maxValue, 0, 0]
     ),
     operation: GelatoCoreLib.Operation.Delegatecall,
   });
@@ -117,7 +134,7 @@ export async function createGelatoOptimizer(
     data: abiEncodeWithSelector(
       ConnectCompound.abi,
       "deposit",
-      [ETH_Address, eth_amount, "987", 0] //TODO: use saved withdrawn amount and save it with setId
+      [ETH_Address, eth_amount, 0, 0]
     ),
     operation: GelatoCoreLib.Operation.Delegatecall,
   });
@@ -129,7 +146,7 @@ export async function createGelatoOptimizer(
     data: abiEncodeWithSelector(
       ConnectCompound.abi,
       "borrow",
-      [constants.DAI, dsaSdk.maxValue, "534", 0] //TODO: use saved withdrawn amount and save it with setId
+      [constants.DAI, dai_amount, 0, 0]
     ),
     operation: GelatoCoreLib.Operation.Delegatecall,
   });
@@ -143,7 +160,7 @@ export async function createGelatoOptimizer(
   const GAS_LIMIT = "4000000";
   const GAS_PRICE_CEIL = ethers.utils.parseUnits("1000", "gwei");
   const taskRefinanceMakerToCompoundIfBetter = new GelatoCoreLib.Task({
-    conditions: [rebalanceCondition],
+    conditions: [rebalanceCondition, enoughDAICondition],
     actions: spells,
     selfProviderGasLimit: GAS_LIMIT,
     selfProviderGasPriceCeil: GAS_PRICE_CEIL,

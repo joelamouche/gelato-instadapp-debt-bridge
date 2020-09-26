@@ -12,7 +12,7 @@ const DAI_100 = ethers.utils.parseUnits("100", 18);
 const APY_2_PERCENT_IN_SECONDS = ethers.BigNumber.from(
   "1000000000627937192491029810"
 );
-export {};
+export { };
 
 // Contracts
 const InstaIndex = require("../../pre-compiles/InstaIndex.json");
@@ -205,11 +205,11 @@ describe("Move DAI lending from DSR to Compound", function () {
         mockCDAI.address, // We are in DSR so we compare against CDAI => SourceA=CDAI
         mockDSR.address, // SourceB=DSR
         await bre.run("abi-encode-with-selector", {
-          abi: require("../artifacts/MockCDAI.json").abi,
+          abi: require("../../artifacts/MockCDAI.json").abi,
           functionName: "supplyRatePerSecond",
         }), // CDAI data feed first (sourceAData)
         await bre.run("abi-encode-with-selector", {
-          abi: require("../artifacts/MockDSR.json").abi,
+          abi: require("../../artifacts/MockDSR.json").abi,
           functionName: "dsr",
         }), // DSR data feed second (sourceBData)
         MIN_SPREAD

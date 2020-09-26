@@ -40,8 +40,8 @@ exports.createDSA = void 0;
 var ethers_1 = require("ethers");
 var constants_1 = require("../constants/constants");
 // Contracts
-var InstaIndex = require("../pre-compiles/InstaIndex.json");
-var InstaList = require("../pre-compiles/InstaList.json");
+var InstaIndex = require("../../pre-compiles/InstaIndex.json");
+var InstaList = require("../../pre-compiles/InstaList.json");
 function createDSA(web3) {
     return __awaiter(this, void 0, void 0, function () {
         var provider, userWallet, userAddress, instaIndex, instaList, dsaIDPrevious, dsaID;

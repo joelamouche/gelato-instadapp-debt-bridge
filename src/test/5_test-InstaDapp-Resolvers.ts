@@ -84,7 +84,7 @@ describe("Test our condition source contracts", function () {
     if (borrowRate == 1e+27) { borrowRate = 0 }
     expect(borrowRate).to.eq(lastVaultFromDSASDK)
   });
-  it.only("#2: Get Compound data from onChain contract", async function () {
+  it("#2: Get Compound data from onChain contract", async function () {
     // In compound, the interest paid is the borrow rate of DAI minus the supply rate of ETH
 
     dsaAddress = await createDSA(web3);
@@ -107,7 +107,7 @@ describe("Test our condition source contracts", function () {
     );
     console.log('hi')
     //console.log('dsa.tokens', await dsaSdk.tokens)
-    let colInfo = await instaCompoundResolver.getPosition(dsaAddress, [constants.CDAI])
+    let colInfo = await instaCompoundResolver.getPosition(dsaAddress, constants.CDAI)
     console.log(colInfo)
     // let borrowRate = Number(colInfo.borrowRate)
     // if (borrowRate == 1e+27) { borrowRate = 0 }

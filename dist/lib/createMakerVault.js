@@ -44,8 +44,8 @@ var ethers_1 = require("ethers");
 var dsa_sdk_1 = __importDefault(require("dsa-sdk"));
 var abiEncodeWithSelector_1 = require("./utils/abiEncodeWithSelector");
 var constants_1 = require("../constants/constants");
-var ConnectMaker = require("../pre-compiles/ConnectMaker.json");
-var InstaAccount = require("../pre-compiles/InstaAccount.json");
+var ConnectMaker = require("../../pre-compiles/ConnectMaker.json");
+var InstaAccount = require("../../pre-compiles/InstaAccount.json");
 function createMakerVault(web3, dsaAddress, eth_amount, dai_amount) {
     return __awaiter(this, void 0, void 0, function () {
         var provider, userWallet, userAddress, dsaSdk, dsa, gasLimit, gasPrice, openVaultData, depositEthData, borrowDaiData;

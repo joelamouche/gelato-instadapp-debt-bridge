@@ -6,6 +6,8 @@ export const constants = {
       DAI_UNISWAP: "0x2a1530C4C41db0B0b2bB646CB5Eb1A67b7158667",
       CDAI: "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
       CETH: "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5",
+      // Conditions
+      ConditionBalance: "0xd69DB9852bAbf9e0bd73B8A090382573C7488154",
       // InstaDapp DSA
       InstaIndex: "0x2971AdFa57b20E5a416aE5a708A8655A9c74f723",
       InstaList: "0x4c8a1BEb8a87765788946D6B19C6C6355194AbEb",

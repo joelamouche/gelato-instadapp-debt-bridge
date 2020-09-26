@@ -13,7 +13,7 @@ const { BigNumber } = require("ethers");
 const DSA = require("dsa-sdk");
 const Web3 = require("web3");
 import { constants } from "../constants/constants";
-export {};
+export { };
 
 // Set up dsa sdk from instaDapp to get resolvers
 const web3 = new Web3("http://localhost:8545");
@@ -163,6 +163,7 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
       web3,
       dsa.address,
       ETH_10,
+      DAI_150,
       mockCDAI.address,
       mockDSR.address,
       conditionCompareUints.address

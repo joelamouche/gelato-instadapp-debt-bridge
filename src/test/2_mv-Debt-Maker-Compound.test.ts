@@ -8,7 +8,7 @@ const { BigNumber } = require("ethers");
 const DSA = require("dsa-sdk");
 const Web3 = require("web3");
 import { constants } from "../constants/constants";
-export {};
+export { };
 
 // Set up dsa sdk from instaDapp to get resolvers
 const web3 = new Web3("http://localhost:8545");
@@ -191,16 +191,16 @@ describe("Move DAI Debt from Maker to Compound", function () {
 
     // Casting it twice makes it easier for the network
     await dsa.cast(
-      [constants.ConnectMaker, constants.ConnectMaker],
-      [openVaultData, depositEthData],
+      [constants.ConnectMaker, constants.ConnectMaker, constants.ConnectMaker],
+      [openVaultData, depositEthData, borrowDaiData],
       userAddress
     );
 
-    await dsa.cast(
-      [constants.ConnectMaker],
-      [borrowDaiData],
-      userAddress
-    );
+    // await dsa.cast(
+    //   [constants.ConnectMaker],
+    //   [borrowDaiData],
+    //   userAddress
+    // );
 
     // Check that 10 eth was trasnfered to the vaultv
     expect(Number(await ethers.provider.getBalance(dsaAddress))).to.be.equal(
@@ -225,11 +225,11 @@ describe("Move DAI Debt from Maker to Compound", function () {
         mockCDAI.address, // We are in DSR so we compare against CDAI => SourceA=CDAI
         mockDSR.address, // SourceB=DSR
         await bre.run("abi-encode-with-selector", {
-          abi: require("../artifacts/MockCDAI.json").abi,
+          abi: require("../../artifacts/MockCDAI.json").abi,
           functionName: "supplyRatePerSecond",
         }), // CDAI data feed first (sourceAData)
         await bre.run("abi-encode-with-selector", {
-          abi: require("../artifacts/MockDSR.json").abi,
+          abi: require("../../artifacts/MockDSR.json").abi,
           functionName: "dsr",
         }), // DSR data feed second (sourceBData)
         MIN_SPREAD
