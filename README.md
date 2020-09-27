@@ -1,12 +1,12 @@
 # Gelato Debt Bridge
 
 <p  align="center">
-    <img  src="assets/instadapp_filled.svg"  width="150px"/>
-    <img  src="assets/Gelato_Black.svg"  width="150px"/>
-    <img  src="assets/chainlink-logo.jpeg"  width="150px"/>
-    <img  src="assets/maker-logo.png"  width="150px"/>
-    <img  src="assets/aave-logo.png"  width="150px"/>
-    <img  src="assets/compound-logo.png"  width="150px"/>
+    <img  src="assets/instadapp_filled.svg"  width="120px"/>
+    <img  src="assets/Gelato_Black.svg"  width="120px"/>
+    <img  src="assets/chainlink-logo.jpeg"  width="120px"/>
+    <img  src="assets/maker-logo.png"  width="120px"/>
+    <img  src="assets/aave-logo.png"  width="120px"/>
+    <img  src="assets/compound-logo.png"  width="120px"/>
 </p>
 
 This repo contains smart contract prototypes and mocks and a test suite showcasing how the InstaDapp DSA could use Gelato to automate the execution (or casting) of its Spells (connectors) based on arbitrary Conditions.
@@ -23,7 +23,7 @@ The second iteration, written for the ChainLink hackathon 2020, implements a **D
 [Maker](https://makerdao.com/en/) and [Compound](https://compound.finance/) are two financial services that allow a user to deposit ETH as a collateral and borrow another token up to a certain ratio (66% for ETHDAI).
 
 <p  align="center">
-    <img  src="assets/maker-vault-diagram.png"  width="150px"/>
+    <img  src="assets/maker-vault-diagram.png"  width="120px"/>
 </p>
 
 For example, if the ETHDAI price is 300, and I deposit 10ETH in a Maker Vault, I can borrow 300 x 10 x 0.666 = 2000 DAI. This costs a yearly rate.
