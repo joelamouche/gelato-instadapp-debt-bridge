@@ -58,8 +58,7 @@ var ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 // NB: it requires mock contract addresses for now but will use actual maker and compound deployed contract in next iteration
 function createGelatoOptimizer(web3, dsaAddress, eth_amount, mockCDAIAddress, mockDSRAddress, conditionAddress) {
     return __awaiter(this, void 0, void 0, function () {
-        var gelatoCore, dsa, conditionCompareUints, provider, userWallet, userAddress, dsaSdk, addAuthData, MIN_SPREAD, rebalanceCondition, _a, _b, spells, connectorPaybackMakerVault, connectorWithdrawFromMakerVault, connectorDepositIntoCompound, connectorBorrowFromCompound, GAS_LIMIT, GAS_PRICE_CEIL, taskRefinanceMakerToCompoundIfBetter, gelatoSelfProvider, _c, _d, TASK_AUTOMATION_FUNDS, expiryDate, taskReceiptId;
-        var _e, _f;
+        var gelatoCore, dsa, conditionCompareUints, provider, userWallet, userAddress, dsaSdk, addAuthData, MIN_SPREAD, rebalanceCondition, _a, _b, _c, spells, connectorPaybackMakerVault, connectorWithdrawFromMakerVault, connectorDepositIntoCompound, connectorBorrowFromCompound, GAS_LIMIT, GAS_PRICE_CEIL, taskRefinanceMakerToCompoundIfBetter, gelatoSelfProvider, _d, _e, _f, TASK_AUTOMATION_FUNDS, expiryDate, taskReceiptId;
         return __generator(this, function (_g) {
             switch (_g.label) {
                 case 0:
@@ -88,7 +87,7 @@ function createGelatoOptimizer(web3, dsaAddress, eth_amount, mockCDAIAddress, mo
                 case 5:
                     MIN_SPREAD = "10000000";
                     _b = (_a = GelatoCoreLib.Condition).bind;
-                    _e = {
+                    _c = {
                         inst: conditionCompareUints.address
                     };
                     return [4 /*yield*/, conditionCompareUints.getConditionData(mockCDAIAddress, // We are in DSR so we compare against CDAI => SourceA=CDAI
@@ -97,8 +96,8 @@ function createGelatoOptimizer(web3, dsaAddress, eth_amount, mockCDAIAddress, mo
                         abiEncodeWithSelector_1.abiEncodeWithSelector(MockDSR.abi, "dsr"), // DSR data feed second (sourceBData)
                         MIN_SPREAD)];
                 case 6:
-                    rebalanceCondition = new (_b.apply(_a, [void 0, (_e.data = _g.sent(),
-                            _e)]))();
+                    rebalanceCondition = new (_b.apply(_a, [void 0, (_c.data = _g.sent(),
+                            _c)]))();
                     spells = [];
                     connectorPaybackMakerVault = new GelatoCoreLib.Action({
                         addr: constants_1.constants.ConnectMaker,
@@ -141,14 +140,14 @@ function createGelatoOptimizer(web3, dsaAddress, eth_amount, mockCDAIAddress, mo
                         //@ts-ignore
                         module: constants_1.constants.ProviderModuleDSA,
                     });
-                    _d = (_c = gelatoCore).stakeExecutor;
+                    _e = (_d = gelatoCore).stakeExecutor;
                     _f = {};
                     return [4 /*yield*/, gelatoCore.minExecutorStake()];
                 case 7: 
                 // ======= Executor Setup =========
                 // For local Testing purposes our test User account will play the role of the Gelato
                 // Executor network because this logic is non-trivial to fork into a local instance
-                return [4 /*yield*/, _d.apply(_c, [(_f.value = _g.sent(),
+                return [4 /*yield*/, _e.apply(_d, [(_f.value = _g.sent(),
                             _f)])];
                 case 8:
                     // ======= Executor Setup =========
