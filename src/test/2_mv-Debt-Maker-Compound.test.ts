@@ -1,14 +1,13 @@
-// running `npx buidler test` automatically makes use of buidler-waffle plugin
-// => only dependency we need is "chai"
+import { BigNumber } from "ethers";
+import { constants } from "../constants/constants";
 const { expect } = require("chai");
 const bre = require("@nomiclabs/buidler");
 const { ethers } = bre;
 const GelatoCoreLib = require("@gelatonetwork/core");
-const { BigNumber } = require("ethers");
+//const { BigNumber } = require("ethers");
 const DSA = require("dsa-sdk");
 const Web3 = require("web3");
-import { constants } from "../constants/constants";
-export {};
+export { };
 
 // Set up dsa sdk from instaDapp to get resolvers
 const web3 = new Web3("http://localhost:8545");
@@ -21,17 +20,17 @@ const DAI_150 = ethers.utils.parseUnits("150", 18);
 const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 
 // Contracts
-const InstaIndex = require("../pre-compiles/InstaIndex.json");
-const InstaList = require("../pre-compiles/InstaList.json");
-const InstaAccount = require("../pre-compiles/InstaAccount.json");
-const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
-const ConnectMaker = require("../pre-compiles/ConnectMaker.json");
-const ConnectInstaPool = require("../pre-compiles/ConnectInstaPool.json");
-const ConnectCompound = require("../pre-compiles/ConnectCompound.json");
-const IERC20 = require("../pre-compiles/IERC20.json");
-const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.json");
+const InstaIndex = require("../../pre-compiles/InstaIndex.json");
+const InstaList = require("../../pre-compiles/InstaList.json");
+const InstaAccount = require("../../pre-compiles/InstaAccount.json");
+const ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
+const ConnectMaker = require("../../pre-compiles/ConnectMaker.json");
+const ConnectInstaPool = require("../../pre-compiles/ConnectInstaPool.json");
+const ConnectCompound = require("../../pre-compiles/ConnectCompound.json");
+const IERC20 = require("../../pre-compiles/IERC20.json");
+const ProviderModuleDSA_ABI = require("../../pre-compiles/ProviderModuleDSA_ABI.json");
 
-const ConnectGelato_ABI = require("../pre-compiles/ConnectGelato_ABI");
+const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 
 describe("Move DAI Debt from Maker to Compound", function () {
   this.timeout(0);
@@ -191,16 +190,16 @@ describe("Move DAI Debt from Maker to Compound", function () {
 
     // Casting it twice makes it easier for the network
     await dsa.cast(
-      [constants.ConnectMaker, constants.ConnectMaker],
-      [openVaultData, depositEthData],
+      [constants.ConnectMaker, constants.ConnectMaker, constants.ConnectMaker],
+      [openVaultData, depositEthData, borrowDaiData],
       userAddress
     );
 
-    await dsa.cast(
-      [constants.ConnectMaker],
-      [borrowDaiData],
-      userAddress
-    );
+    // await dsa.cast(
+    //   [constants.ConnectMaker],
+    //   [borrowDaiData],
+    //   userAddress
+    // );
 
     // Check that 10 eth was trasnfered to the vaultv
     expect(Number(await ethers.provider.getBalance(dsaAddress))).to.be.equal(
@@ -214,7 +213,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
     console.log("Vault setup with 150 DAI Debt");
   });
 
-  it("#1: Gelato refinances DAI from DSR=>Compound, if better rate", async function () {
+  it("#1: Gelato refinances DAI from Maker vault=>Compound, if better rate", async function () {
     // ======= Condition setup ======
     // We instantiate the Rebalance Condition:
     // Compound APY needs to be 10000000 per second points higher than DSR
@@ -225,11 +224,11 @@ describe("Move DAI Debt from Maker to Compound", function () {
         mockCDAI.address, // We are in DSR so we compare against CDAI => SourceA=CDAI
         mockDSR.address, // SourceB=DSR
         await bre.run("abi-encode-with-selector", {
-          abi: require("../artifacts/MockCDAI.json").abi,
+          abi: require("../../artifacts/MockCDAI.json").abi,
           functionName: "supplyRatePerSecond",
         }), // CDAI data feed first (sourceAData)
         await bre.run("abi-encode-with-selector", {
-          abi: require("../artifacts/MockDSR.json").abi,
+          abi: require("../../artifacts/MockDSR.json").abi,
           functionName: "dsr",
         }), // DSR data feed second (sourceBData)
         MIN_SPREAD
@@ -240,7 +239,9 @@ describe("Move DAI Debt from Maker to Compound", function () {
     // To assimilate to DSA SDK
     const spells: any[] = [];
 
-    let borrowAmount = dsaSdk.tokens.fromDecimal(200000, "dai");
+    let borrowAmount: BigNumber = dsaSdk.tokens.fromDecimal(200000, "dai");
+    console.log(borrowAmount)
+    console.log(Number(borrowAmount))
     // Borrow DAI from InstaPool
     const connectorBorrowFromInstaPool = new GelatoCoreLib.Action({
       addr: constants.ConnectInstaPool,
@@ -251,7 +252,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
       }),
       operation: GelatoCoreLib.Operation.Delegatecall,
     });
-    // spells.push(connectorBorrowFromInstaPool); //TODO: fix flashloan from instapool
+    spells.push(connectorBorrowFromInstaPool); //TODO: fix flashloan from instapool
 
     // Payback Maker Vault with 150 DAI
     const connectorPaybackMakerVault = new GelatoCoreLib.Action({
@@ -311,7 +312,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
       }),
       operation: GelatoCoreLib.Operation.Delegatecall,
     });
-    // spells.push(connectorPaybackInstaPool);
+    spells.push(connectorPaybackInstaPool);
 
     // ======= Gelato Task Setup =========
     // A Gelato Task just combines Conditions with Actions

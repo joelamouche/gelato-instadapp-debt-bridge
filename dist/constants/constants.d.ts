@@ -4,6 +4,8 @@ export declare const constants: {
     DAI: string;
     DAI_UNISWAP: string;
     CDAI: string;
+    CETH: string;
+    ConditionBalance: string;
     InstaIndex: string;
     InstaList: string;
     InstaConnectors: string;

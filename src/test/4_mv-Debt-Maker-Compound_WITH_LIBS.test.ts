@@ -13,7 +13,7 @@ const { BigNumber } = require("ethers");
 const DSA = require("dsa-sdk");
 const Web3 = require("web3");
 import { constants } from "../constants/constants";
-export {};
+export { };
 
 // Set up dsa sdk from instaDapp to get resolvers
 const web3 = new Web3("http://localhost:8545");
@@ -25,12 +25,12 @@ const DAI_150 = ethers.utils.parseUnits("150", 18);
 const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 
 // Contracts
-const InstaAccount = require("../pre-compiles/InstaAccount.json");
-const ConnectAuth = require("../pre-compiles/ConnectAuth.json");
-const IERC20 = require("../pre-compiles/IERC20.json");
-const ProviderModuleDSA_ABI = require("../pre-compiles/ProviderModuleDSA_ABI.json");
+const InstaAccount = require("../../pre-compiles/InstaAccount.json");
+const ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
+const IERC20 = require("../../pre-compiles/IERC20.json");
+const ProviderModuleDSA_ABI = require("../../pre-compiles/ProviderModuleDSA_ABI.json");
 
-const ConnectGelato_ABI = require("../pre-compiles/ConnectGelato_ABI");
+const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 
 describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
   this.timeout(0);
@@ -54,6 +54,7 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
   let mockDSR;
   let mockCDAI;
   let conditionCompareUints;
+  let conditionHasMakerVault;
 
   before(async function () {
     // Get Test Wallet for local testnet
@@ -112,6 +113,12 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
     conditionCompareUints = await ConditionCompareUintsFromTwoSources.deploy();
     await conditionCompareUints.deployed();
 
+    const ConditionHasMakerVault = await ethers.getContractFactory(
+      "ConditionHasOpenMakerVault"
+    );
+    conditionHasMakerVault = await ConditionHasMakerVault.deploy();
+    await conditionHasMakerVault.deployed();
+
     // ===== Dapp Dependencies SETUP ==================
 
     // Let's get open a maker vault with 10 eth, using instaDapp
@@ -163,9 +170,11 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
       web3,
       dsa.address,
       ETH_10,
+      DAI_150,
       mockCDAI.address,
       mockDSR.address,
-      conditionCompareUints.address
+      conditionCompareUints.address,
+      conditionHasMakerVault.address
     );
 
     expect(await gelatoCore.isExecutorMinStaked(userAddress)).to.be.true;

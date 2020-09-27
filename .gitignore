@@ -13,8 +13,12 @@ cache/
 *.icloud
 
 # yarn
+<<<<<<< HEAD
+yarn-error.log
+=======
 yarn-error.log
 
 # vim 
 **/*.swp
 **/*.swo
+>>>>>>> master

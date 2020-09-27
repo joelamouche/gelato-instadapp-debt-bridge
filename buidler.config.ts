@@ -32,6 +32,8 @@ const config: BuidlerConfig = {
             url: "http://localhost:8545",
             // @ts-ignore
             fork: `https://:${INFURA_PRIVATE_KEY}@mainnet.infura.io/v3/${INFURA_ID}`,
+
+      defaultBalanceEther: 1000,
             GelatoCore: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8",
         },
     },
