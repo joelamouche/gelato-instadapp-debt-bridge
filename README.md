@@ -49,6 +49,17 @@ An interface for that can be found [here](https://dsa.instadapp.io/recipe/refina
 
 The difference is that thanks to Gelato, someone deploying a vault from our interface wouldn't need to refinance manually, as **Gelato executors will trigger the call when the conditions are met**.
 
+## More products
+
+This app can serve as a template for many more interesting lending applications. We included two more examples in this repository:
+
+### Refinance to an Aave
+The createGelatoOptimizerAave function can setup an automation to refinance to an Aave lending position.
+
+### Liquidate on threshold
+To avoid losing the liquidation fee, one can use Gelato to automatically liquidate a Maker Vault before the -50% mark on the ETHDAI price.
+This is showcase in the createGelatoAutoLiquidator function.
+
 
 ### Testing
 The following contracts were added to showcase the automation of the Spell:

@@ -14,13 +14,15 @@ export const constants = {
       InstaConnectors: "0xD6A602C01a023B98Ecfb29Df02FBA380d3B21E0c",
       InstaAccount: "0x939Daad09fC4A9B8f8A9352A485DAb2df4F4B3F8",
       // Connectors
-      ConnectAuth: "0xB3242e09C8E5cE6E14296b3d3AbC4C6965F49b98",
-      ConnectBasic: "0x9370236a085A99Aa359f4bD2f0424b8c3bf25C99",
-      ConnectMaker: "0x58Bbb677296B6d1B596288B31Abb928492400fBF",
-      ConnectCompound: "0xaeCfA2c0f4bAD0Ecee46dcd1250cd0334fE28BC0",
+      ConnectBasic: "0x6a31c5982C5Bc5533432913cf06a66b6D3333a95",
+      ConnectAuth: "0xd1aff9f2acf800c876c409100d6f39aea93fc3d9",
+      ConnectMaker: "0x6c4E4D4aB22cAB08b8498a3A232D92609e8b2d62",
+      ConnectCompound: "0x07F81230d73a78f63F0c2A3403AD281b067d28F8",
       ConnectGelato: "0x37A7009d424951dd5D5F155fA588D9a03C455163",
-      ConnectInstaPool: "0x6d11A71575C34eB7b5E22949fAfCd49A2FA2A8F9",
+      ConnectInstaPool: "0xCeF5f3c402d4fef76A038e89a4357176963e1464",
+      ConnectAave: "0x3fd79E82CCAc22A1c1b504e8a04bec133CB3f282",
       // Resolvers
       InstaCompoundResolver: "0x43a041ee9ac82f4e375a67f67685b750c0c7c9af",
       InstaMakerResolver: "0x0A7008B38E7015F8C36A49eEbc32513ECA8801E5",
+      InstaAaveResolver: "0xe04Cd009fF68628BC663058dDAA7E5Bf7979BEaF",
 }

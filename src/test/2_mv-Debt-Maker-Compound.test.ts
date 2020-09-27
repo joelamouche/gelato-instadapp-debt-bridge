@@ -190,16 +190,20 @@ describe("Move DAI Debt from Maker to Compound", function () {
 
     // Casting it twice makes it easier for the network
     await dsa.cast(
-      [constants.ConnectMaker, constants.ConnectMaker, constants.ConnectMaker],
-      [openVaultData, depositEthData, borrowDaiData],
+      [constants.ConnectMaker, constants.ConnectMaker,
+        //constants.ConnectMaker
+      ],
+      [openVaultData, depositEthData,
+        //borrowDaiData
+      ],
       userAddress
     );
 
-    // await dsa.cast(
-    //   [constants.ConnectMaker],
-    //   [borrowDaiData],
-    //   userAddress
-    // );
+    await dsa.cast(
+      [constants.ConnectMaker],
+      [borrowDaiData],
+      userAddress
+    );
 
     // Check that 10 eth was trasnfered to the vaultv
     expect(Number(await ethers.provider.getBalance(dsaAddress))).to.be.equal(
@@ -239,9 +243,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
     // To assimilate to DSA SDK
     const spells: any[] = [];
 
-    let borrowAmount: BigNumber = dsaSdk.tokens.fromDecimal(200000, "dai");
-    console.log(borrowAmount)
-    console.log(Number(borrowAmount))
+    let borrowAmount: BigNumber = ethers.utils.parseUnits("2000", 18); //dsaSdk.tokens.fromDecimal(2000, "dai");
     // Borrow DAI from InstaPool
     const connectorBorrowFromInstaPool = new GelatoCoreLib.Action({
       addr: constants.ConnectInstaPool,
@@ -252,7 +254,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
       }),
       operation: GelatoCoreLib.Operation.Delegatecall,
     });
-    spells.push(connectorBorrowFromInstaPool); //TODO: fix flashloan from instapool
+    //spells.push(connectorBorrowFromInstaPool); //TODO: fix flashloan from instapool
 
     // Payback Maker Vault with 150 DAI
     const connectorPaybackMakerVault = new GelatoCoreLib.Action({
@@ -312,7 +314,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
       }),
       operation: GelatoCoreLib.Operation.Delegatecall,
     });
-    spells.push(connectorPaybackInstaPool);
+    // spells.push(connectorPaybackInstaPool);
 
     // ======= Gelato Task Setup =========
     // A Gelato Task just combines Conditions with Actions

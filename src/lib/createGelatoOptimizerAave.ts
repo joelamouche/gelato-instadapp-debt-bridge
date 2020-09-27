@@ -13,7 +13,7 @@ const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 // Contracts
 const InstaAccount = require("../../pre-compiles/InstaAccount.json");
 const ConnectMaker = require("../../pre-compiles/ConnectMaker.json");
-const ConnectCompound = require("../../pre-compiles/ConnectCompound.json");
+const ConnectAave_ABI = require("../../pre-compiles/ConnectAave_ABI.json");
 const ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
 const ConditionCompareUintsFromTwoSources = require("../../artifacts/ConditionCompareUintsFromTwoSources.json");
 const ConditionHasOpenMakerVault = require("../../artifacts/ConditionHasOpenMakerVault.json");
@@ -24,9 +24,9 @@ const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 const ConditionBalance_ABI = require("../../pre-compiles/ConditionBalance_ABI");
 
 // requires the user to have an open Maker Vault
-// NB: it requires mock contract addresses for now but will use actual maker and compound deployed contract in next iteration
+// NB: it requires mock contract addresses for now but will use actual maker and aave deployed contract in next iteration
 
-export async function createGelatoOptimizer(
+export async function createGelatoOptimizerAave(
     web3: Web3,
     dsaAddress: string,
     eth_amount: BigNumber,
@@ -85,7 +85,7 @@ export async function createGelatoOptimizer(
 
     // ======= Condition setup ======
     // We instantiate the Rebalance Condition:
-    // Compound APY needs to be 10000000 per second points higher than DSR
+    // Aave APY needs to be 10000000 per second points higher than DSR
     const MIN_SPREAD = "10000000";
     const rebalanceCondition = new GelatoCoreLib.Condition({
         inst: conditionCompareUints.address,
@@ -144,11 +144,11 @@ export async function createGelatoOptimizer(
     });
     spells.push(connectorWithdrawFromMakerVault);
 
-    // Deposit ETH into Compound Vault
+    // Deposit ETH into Aave Vault
     const connectorDepositIntoCompound = new GelatoCoreLib.Action({
-        addr: constants.ConnectCompound,
+        addr: constants.ConnectAave,
         data: abiEncodeWithSelector(
-            ConnectCompound.abi,
+            ConnectAave_ABI,
             "deposit",
             [ETH_Address, eth_amount, 0, 0]
         ),
@@ -156,17 +156,17 @@ export async function createGelatoOptimizer(
     });
     spells.push(connectorDepositIntoCompound);
 
-    // Borrow DAI from Compound vault
+    // Borrow DAI from Aave vault
     const connectorBorrowFromCompound = new GelatoCoreLib.Action({
-        addr: constants.ConnectCompound,
+        addr: constants.ConnectAave,
         data: abiEncodeWithSelector(
-            ConnectCompound.abi,
+            ConnectAave_ABI,
             "borrow",
             [constants.DAI, dai_amount, 0, 0]
         ),
         operation: GelatoCoreLib.Operation.Delegatecall,
     });
-    spells.push(connectorBorrowFromCompound);
+    //spells.push(connectorBorrowFromCompound);
 
     // ======= Gelato Task Setup =========
     // A Gelato Task just combines Conditions with Actions
@@ -175,7 +175,7 @@ export async function createGelatoOptimizer(
     // one gas price in the current Gelato system: fast gwei read from Chainlink.
     const GAS_LIMIT = "4000000";
     const GAS_PRICE_CEIL = ethers.utils.parseUnits("1000", "gwei");
-    const taskRefinanceMakerToCompoundIfBetter = new GelatoCoreLib.Task({
+    const taskRefinanceMakerToAaveIfBetter = new GelatoCoreLib.Task({
         conditions: [rebalanceCondition, enoughDAICondition, hasMakerVaultCondition],
         actions: spells,
         selfProviderGasLimit: GAS_LIMIT,
@@ -249,7 +249,7 @@ export async function createGelatoOptimizer(
         [
             abiEncodeWithSelector(ConnectGelato_ABI, "submitTask", [
                 gelatoSelfProvider,
-                taskRefinanceMakerToCompoundIfBetter,
+                taskRefinanceMakerToAaveIfBetter,
                 expiryDate,
             ]),
         ], // datas
@@ -267,7 +267,7 @@ export async function createGelatoOptimizer(
         id: taskReceiptId,
         userProxy: dsaAddress,
         provider: gelatoSelfProvider,
-        tasks: [taskRefinanceMakerToCompoundIfBetter],
+        tasks: [taskRefinanceMakerToAaveIfBetter],
         expiryDate,
     });
 }
