@@ -1,5 +1,6 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity 0.6.12;
+pragma experimental ABIEncoderV2;
 
 import {InstaMakerResolver, InstaMcdAddress,CdpsLike} from "./InstaMakerResolver.sol";
 
@@ -19,6 +20,6 @@ contract CustomMakerInterface is InstaMakerResolver {
 
     /// @dev Uget current Maker borrow rate
     function getBorrowRate() public view returns (uint256)  {
-        return getFee("ETH-A")
+        return getFee("ETH-A");
     }
 }
