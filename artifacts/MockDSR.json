@@ -1,0 +1,46 @@
+{
+  "contractName": "MockDSR",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_dsr",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "dsr",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_dsr",
+          "type": "uint256"
+        }
+      ],
+      "name": "setDSR",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b506040516100f23803806100f28339818101604052602081101561003357600080fd5b505160005560ac806100466000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c8063487bf08214603757806365c0ac4b14604f575b600080fd5b603d606b565b60408051918252519081900360200190f35b606960048036036020811015606357600080fd5b50356071565b005b60005481565b60005556fea26469706673582212202f6cf2a51019dae84de7fbcade14d5b0c134c190099d4666dfb53b86edeefacb64736f6c634300060c0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c8063487bf08214603757806365c0ac4b14604f575b600080fd5b603d606b565b60408051918252519081900360200190f35b606960048036036020811015606357600080fd5b50356071565b005b60005481565b60005556fea26469706673582212202f6cf2a51019dae84de7fbcade14d5b0c134c190099d4666dfb53b86edeefacb64736f6c634300060c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,46 @@
+{
+  "contractName": "MockCDAI",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_sRPS",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_rate",
+          "type": "uint256"
+        }
+      ],
+      "name": "setSupplyRatePerSecond",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "supplyRatePerSecond",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b506040516100f23803806100f28339818101604052602081101561003357600080fd5b505160005560ac806100466000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c80631eeed95e146037578063b1d38974146053575b600080fd5b605160048036036020811015604b57600080fd5b5035606b565b005b60596070565b60408051918252519081900360200190f35b600055565b6000548156fea2646970667358221220df38b91927913b0681a7bda3fca6c433a586d60423b8e56a9ab7038d01fa010a64736f6c634300060c0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c80631eeed95e146037578063b1d38974146053575b600080fd5b605160048036036020811015604b57600080fd5b5035606b565b005b60596070565b60408051918252519081900360200190f35b600055565b6000548156fea2646970667358221220df38b91927913b0681a7bda3fca6c433a586d60423b8e56a9ab7038d01fa010a64736f6c634300060c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
