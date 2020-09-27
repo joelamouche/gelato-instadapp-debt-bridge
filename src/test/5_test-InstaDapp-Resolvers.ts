@@ -88,29 +88,12 @@ describe("Test our condition source contracts", function () {
 
     dsaAddress = await createDSA(web3);
     [userWallet] = await ethers.getSigners();
-    console.log('ha')
-    // console.log(await dsaSdk.compound.getPosition(dsaAddress));
-    // console.log((await dsaSdk.compound.getPosition(dsaAddress)).eth);
-    // console.log((await dsaSdk.compound.getPosition(dsaAddress)).dai);
 
     const ethSupplyRate = (await dsaSdk.compound.getPosition(dsaAddress)).eth.supplyRate
     const daiBorrowRate = (await dsaSdk.compound.getPosition(dsaAddress)).dai.borrowRate
     console.log('ethSupplyRate', ethSupplyRate, 'daiBorrowRate', daiBorrowRate)
     const totalBorrowRate = daiBorrowRate - ethSupplyRate
     console.log('totalBorrowRate', totalBorrowRate)
-
-    // Instantiate Maker Resolver contract
-    // instaCompoundResolver = await ethers.getContractAt(
-    //   InstaCompoundResolver.abi,
-    //   constants.InstaCompoundResolver
-    // );
-    // console.log('hi')
-    // //console.log('dsa.tokens', await dsaSdk.tokens)
-    // let colInfo = await instaCompoundResolver.getPosition(dsaAddress, [constants.CDAI])
-    // console.log(colInfo)
-    // let borrowRate = Number(colInfo.borrowRate)
-    // if (borrowRate == 1e+27) { borrowRate = 0 }
-    // expect(borrowRate).to.eq(lastVaultFromDSASDK)
 
     const cDai = await ethers.getContractAt(
       CDAI_ABI,

@@ -3,7 +3,9 @@
 <p  align="center">
     <img  src="assets/instadapp_filled.svg"  width="150px"/>
     <img  src="assets/Gelato_Black.svg"  width="150px"/>
+    <img  src="assets/chainlink-logo.jpeg"  width="150px"/>
     <img  src="assets/maker-logo.png"  width="150px"/>
+    <img  src="assets/aave-logo.png"  width="150px"/>
     <img  src="assets/compound-logo.png"  width="150px"/>
 </p>
 
