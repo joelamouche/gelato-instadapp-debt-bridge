@@ -19,6 +19,7 @@ export { };
 
 const IERC20 = require("../../pre-compiles/IERC20.json");
 const ConnectBasic = require("../../pre-compiles/ConnectBasic.json");
+const ConnectMaker = require("../../pre-compiles/ConnectMaker.json");
 
 // Set up dsa sdk from instaDapp to get resolvers
 const web3 = new Web3("http://localhost:8545");
@@ -27,6 +28,7 @@ const dsaSdk = new DSA(web3);
 // Contracts
 const InstaList = require("../../pre-compiles/InstaList.json");
 const InstaAccount = require("../../pre-compiles/InstaAccount.json");
+const IUniswapExchange = require("../../pre-compiles/IUniswapExchange.json");
 
 const ETH_10 = ethers.utils.parseEther("10");
 const DAI_150 = ethers.utils.parseUnits("150", 18);
@@ -117,6 +119,7 @@ describe("Test Lib functions", function () {
     let mockCDAI;
     let mockDSR;
     let conditionCompareUints;
+    let conditionHasMakerVault;
     let gelatoCore;
 
     beforeEach(async function () {
@@ -141,6 +144,11 @@ describe("Test Lib functions", function () {
       );
       conditionCompareUints = await ConditionCompareUintsFromTwoSources.deploy();
       await conditionCompareUints.deployed();
+      const ConditionHasMakerVault = await ethers.getContractFactory(
+        "ConditionHasOpenMakerVault"
+      );
+      conditionHasMakerVault = await ConditionHasMakerVault.deploy();
+      await conditionHasMakerVault.deployed();
 
       // Create DSA for user
       dsaAddress = await createDSA(web3);
@@ -176,7 +184,8 @@ describe("Test Lib functions", function () {
         DAI_150,
         mockCDAI.address,
         mockDSR.address,
-        conditionCompareUints.address
+        conditionCompareUints.address,
+        conditionHasMakerVault.address
       );
 
       expect(await gelatoCore.isExecutorMinStaked(userAddress)).to.be.true;
@@ -264,13 +273,6 @@ describe("Test Lib functions", function () {
       const GAS_LIMIT = "4000000";
       const GAS_PRICE_CEIL = ethers.utils.parseUnits("1000", "gwei");
 
-      // ======= Gelato Task Provision =========
-      // For testing purpose
-      // const TASK_AUTOMATION_FUNDS = await gelatoCore.minExecProviderFunds(
-      //   GAS_LIMIT,
-      //   GAS_PRICE_CEIL
-      // );
-
       // Create Gelato Optimizer
       const taskReceipt = await createGelatoOptimizer(
         web3,
@@ -279,7 +281,8 @@ describe("Test Lib functions", function () {
         DAI_150,
         mockCDAI.address,
         mockDSR.address,
-        conditionCompareUints.address
+        conditionCompareUints.address,
+        conditionHasMakerVault.address
       );
 
       // ======= 📣 TASK EXECUTION 📣 =========
@@ -321,6 +324,100 @@ describe("Test Lib functions", function () {
       expect(
         await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
       ).to.be.equal("ConditionNotOk:NotOkERC20BalanceIsNotGreaterThanRefBalance");
+    });
+
+    it("refinancing shouldn't happen if user has no open maker vault", async () => {
+      // ======= Condition setup ======
+      // We instantiate the Rebalance Condition:
+      // Compound APY needs to be 10000000 per second points higher than DSR
+      const MIN_SPREAD = "10000000";
+
+      // ======= Gelato Task Setup =========
+      // For testing purpose
+      const GAS_LIMIT = "4000000";
+      const GAS_PRICE_CEIL = ethers.utils.parseUnits("1000", "gwei");
+
+      // Create Gelato Optimizer
+      const taskReceipt = await createGelatoOptimizer(
+        web3,
+        dsaAddress,
+        ETH_10,
+        DAI_150,
+        mockCDAI.address,
+        mockDSR.address,
+        conditionCompareUints.address,
+        conditionHasMakerVault.address
+      );
+
+      // ======= 📣 TASK EXECUTION 📣 =========
+
+      // First we fetch the gelatoGasPrice as fed by ChainLink oracle. Gelato
+      // allows Users to specify a maximum fast gwei gas price for their Tasks
+      // to remain executable up until.
+      const gelatoGasPrice = await bre.run("fetchGelatoGasPrice");
+      expect(gelatoGasPrice).to.be.lte(GAS_PRICE_CEIL);
+
+      // We defined a MIN_SPREAD of 10000000 points in the per second rate
+      // for our ConditionCompareUintsFromTwoSources. So we now
+      // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+      // and expect it to mean that our Task becomes executable.
+      await mockCDAI.setSupplyRatePerSecond(
+        (await mockDSR.dsr()).add(MIN_SPREAD)
+      );
+
+      // Check that with an open maker vault, the task is executable
+      expect(
+        await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
+      ).to.be.equal("OK");
+
+      // Payback Maker Vault with all the DAI
+      const connectorPaybackMakerVault = await bre.run("abi-encode-with-selector", {
+        abi: ConnectMaker.abi,
+        functionName: "payback",
+        inputs: [0, DAI_150, 0, 0],
+      });
+      // // Withdraw ETH from Vault
+      const connectorWithdrawFromMakerVault = await bre.run("abi-encode-with-selector", {
+        abi: ConnectMaker.abi,
+        functionName: "withdraw",
+        inputs: [0, ETH_10, 0, 0],
+      });
+      const connectorCloseMakerVault = await bre.run("abi-encode-with-selector", {
+        abi: ConnectMaker.abi,
+        functionName: "close",
+        inputs: [0],
+      });
+      let dsa = new Contract(dsaAddress, InstaAccount.abi, userWallet);
+      const gasLimit = ethers.BigNumber.from(1000000);
+      const gasPrice = ethers.utils.parseUnits("20", "gwei");
+      await dsa.cast([constants.ConnectMaker, constants.ConnectMaker, constants.ConnectMaker], [connectorPaybackMakerVault, connectorWithdrawFromMakerVault, connectorCloseMakerVault], userAddress, {
+        gasLimit,
+        gasPrice,
+      })
+
+      // Let's get the test user 100 DAI++ from Uniswap
+      // TODO use instadapp connector for this
+      const daiUniswapExchange = await ethers.getContractAt(
+        IUniswapExchange.abi,
+        // @ts-ignore
+        constants.DAI_UNISWAP
+      );
+      await daiUniswapExchange.ethToTokenTransferInput(
+        1,
+        2525644800, // random timestamp in the future (year 2050)
+        userAddress,
+        {
+          value: ethers.utils.parseEther("2"),
+        }
+      );
+      let dai = await ethers.getContractAt(IERC20.abi, constants.DAI);
+      await dai.transfer(dsaAddress, DAI_150);
+      expect(await dai.balanceOf(dsaAddress)).to.be.gte(DAI_150);
+
+      // Now the task shouldn't be executable anymore
+      expect(
+        await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
+      ).to.be.equal("ConditionNotOk:No open vault");
     });
   });
 });

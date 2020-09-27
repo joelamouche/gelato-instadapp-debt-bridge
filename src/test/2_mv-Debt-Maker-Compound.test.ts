@@ -1,13 +1,12 @@
-// running `npx buidler test` automatically makes use of buidler-waffle plugin
-// => only dependency we need is "chai"
+import { BigNumber } from "ethers";
+import { constants } from "../constants/constants";
 const { expect } = require("chai");
 const bre = require("@nomiclabs/buidler");
 const { ethers } = bre;
 const GelatoCoreLib = require("@gelatonetwork/core");
-const { BigNumber } = require("ethers");
+//const { BigNumber } = require("ethers");
 const DSA = require("dsa-sdk");
 const Web3 = require("web3");
-import { constants } from "../constants/constants";
 export { };
 
 // Set up dsa sdk from instaDapp to get resolvers
@@ -240,7 +239,9 @@ describe("Move DAI Debt from Maker to Compound", function () {
     // To assimilate to DSA SDK
     const spells: any[] = [];
 
-    let borrowAmount = dsaSdk.tokens.fromDecimal(200000, "dai");
+    let borrowAmount: BigNumber = dsaSdk.tokens.fromDecimal(200000, "dai");
+    console.log(borrowAmount)
+    console.log(Number(borrowAmount))
     // Borrow DAI from InstaPool
     const connectorBorrowFromInstaPool = new GelatoCoreLib.Action({
       addr: constants.ConnectInstaPool,
@@ -251,7 +252,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
       }),
       operation: GelatoCoreLib.Operation.Delegatecall,
     });
-    // spells.push(connectorBorrowFromInstaPool); //TODO: fix flashloan from instapool
+    spells.push(connectorBorrowFromInstaPool); //TODO: fix flashloan from instapool
 
     // Payback Maker Vault with 150 DAI
     const connectorPaybackMakerVault = new GelatoCoreLib.Action({
@@ -311,7 +312,7 @@ describe("Move DAI Debt from Maker to Compound", function () {
       }),
       operation: GelatoCoreLib.Operation.Delegatecall,
     });
-    // spells.push(connectorPaybackInstaPool);
+    spells.push(connectorPaybackInstaPool);
 
     // ======= Gelato Task Setup =========
     // A Gelato Task just combines Conditions with Actions

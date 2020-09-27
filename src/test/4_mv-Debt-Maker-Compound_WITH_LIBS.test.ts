@@ -54,6 +54,7 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
   let mockDSR;
   let mockCDAI;
   let conditionCompareUints;
+  let conditionHasMakerVault;
 
   before(async function () {
     // Get Test Wallet for local testnet
@@ -112,6 +113,12 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
     conditionCompareUints = await ConditionCompareUintsFromTwoSources.deploy();
     await conditionCompareUints.deployed();
 
+    const ConditionHasMakerVault = await ethers.getContractFactory(
+      "ConditionHasOpenMakerVault"
+    );
+    conditionHasMakerVault = await ConditionHasMakerVault.deploy();
+    await conditionHasMakerVault.deployed();
+
     // ===== Dapp Dependencies SETUP ==================
 
     // Let's get open a maker vault with 10 eth, using instaDapp
@@ -166,7 +173,8 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
       DAI_150,
       mockCDAI.address,
       mockDSR.address,
-      conditionCompareUints.address
+      conditionCompareUints.address,
+      conditionHasMakerVault.address
     );
 
     expect(await gelatoCore.isExecutorMinStaked(userAddress)).to.be.true;

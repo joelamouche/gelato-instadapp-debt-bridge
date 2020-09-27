@@ -51,46 +51,48 @@ var ConnectMaker = require("../../pre-compiles/ConnectMaker.json");
 var ConnectCompound = require("../../pre-compiles/ConnectCompound.json");
 var ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
 var ConditionCompareUintsFromTwoSources = require("../../artifacts/ConditionCompareUintsFromTwoSources.json");
+var ConditionHasOpenMakerVault = require("../../artifacts/ConditionHasOpenMakerVault.json");
 var MockCDAI = require("../../artifacts/MockCDAI.json");
 var MockDSR = require("../../artifacts/MockDSR.json");
 var ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 var ConditionBalance_ABI = require("../../pre-compiles/ConditionBalance_ABI");
 // requires the user to have an open Maker Vault
 // NB: it requires mock contract addresses for now but will use actual maker and compound deployed contract in next iteration
-function createGelatoOptimizer(web3, dsaAddress, eth_amount, dai_amount, mockCDAIAddress, mockDSRAddress, conditionAddress) {
+function createGelatoOptimizer(web3, dsaAddress, eth_amount, dai_amount, mockCDAIAddress, mockDSRAddress, conditionCompareAddress, conditionHasMakerVaultAddress) {
     return __awaiter(this, void 0, void 0, function () {
-        var gelatoCore, dsa, conditionCompareUints, conditionBalance, provider, userWallet, userAddress, dsaSdk, addAuthData, MIN_SPREAD, rebalanceCondition, _a, _b, enoughDAICondition, _c, _d, spells, connectorPaybackMakerVault, connectorWithdrawFromMakerVault, connectorDepositIntoCompound, connectorBorrowFromCompound, GAS_LIMIT, GAS_PRICE_CEIL, taskRefinanceMakerToCompoundIfBetter, gelatoSelfProvider, _e, _f, TASK_AUTOMATION_FUNDS, expiryDate, taskReceiptId;
-        var _g, _h, _j;
-        return __generator(this, function (_k) {
-            switch (_k.label) {
+        var gelatoCore, dsa, conditionCompareUints, conditionBalance, conditionHasOpenMakerVault, provider, userWallet, userAddress, dsaSdk, addAuthData, MIN_SPREAD, rebalanceCondition, _a, _b, enoughDAICondition, _c, _d, hasMakerVaultCondition, _e, _f, spells, connectorPaybackMakerVault, connectorWithdrawFromMakerVault, connectorDepositIntoCompound, connectorBorrowFromCompound, GAS_LIMIT, GAS_PRICE_CEIL, taskRefinanceMakerToCompoundIfBetter, gelatoSelfProvider, _g, _h, TASK_AUTOMATION_FUNDS, expiryDate, taskReceiptId;
+        var _j, _k, _l, _m;
+        return __generator(this, function (_o) {
+            switch (_o.label) {
                 case 0:
                     provider = new ethers_1.ethers.providers.Web3Provider(web3.currentProvider);
                     return [4 /*yield*/, provider.getSigner()];
                 case 1:
-                    userWallet = _k.sent();
+                    userWallet = _o.sent();
                     return [4 /*yield*/, userWallet.getAddress()];
                 case 2:
-                    userAddress = _k.sent();
+                    userAddress = _o.sent();
                     dsaSdk = new DSA(web3);
                     // Instantiate Contracts
                     gelatoCore = new ethers_1.Contract(constants_1.constants.GelatoCore, GelatoCoreLib.GelatoCore.abi, userWallet);
                     dsa = new ethers_1.Contract(dsaAddress, InstaAccount.abi, userWallet);
-                    conditionCompareUints = new ethers_1.Contract(conditionAddress, ConditionCompareUintsFromTwoSources.abi, userWallet);
+                    conditionCompareUints = new ethers_1.Contract(conditionCompareAddress, ConditionCompareUintsFromTwoSources.abi, userWallet);
                     conditionBalance = new ethers_1.Contract(constants_1.constants.ConditionBalance, ConditionBalance_ABI, userWallet);
+                    conditionHasOpenMakerVault = new ethers_1.Contract(conditionHasMakerVaultAddress, ConditionHasOpenMakerVault.abi, userWallet);
                     return [4 /*yield*/, dsaSdk.getAuthByAddress(dsaAddress)];
                 case 3:
-                    if (!!(_k.sent()).includes(gelatoCore.address)) return [3 /*break*/, 5];
+                    if (!!(_o.sent()).includes(gelatoCore.address)) return [3 /*break*/, 5];
                     addAuthData = abiEncodeWithSelector_1.abiEncodeWithSelector(ConnectAuth.abi, "add", [
                         gelatoCore.address,
                     ]);
                     return [4 /*yield*/, dsa.cast([constants_1.constants.ConnectAuth], [addAuthData], userAddress)];
                 case 4:
-                    _k.sent();
-                    _k.label = 5;
+                    _o.sent();
+                    _o.label = 5;
                 case 5:
                     MIN_SPREAD = "10000000";
                     _b = (_a = GelatoCoreLib.Condition).bind;
-                    _g = {
+                    _j = {
                         inst: conditionCompareUints.address
                     };
                     return [4 /*yield*/, conditionCompareUints.getConditionData(mockCDAIAddress, // We are in DSR so we compare against CDAI => SourceA=CDAI
@@ -99,16 +101,24 @@ function createGelatoOptimizer(web3, dsaAddress, eth_amount, dai_amount, mockCDA
                         abiEncodeWithSelector_1.abiEncodeWithSelector(MockDSR.abi, "dsr"), // DSR data feed second (sourceBData)
                         MIN_SPREAD)];
                 case 6:
-                    rebalanceCondition = new (_b.apply(_a, [void 0, (_g.data = _k.sent(),
-                            _g)]))();
+                    rebalanceCondition = new (_b.apply(_a, [void 0, (_j.data = _o.sent(),
+                            _j)]))();
                     _d = (_c = GelatoCoreLib.Condition).bind;
-                    _h = {
+                    _k = {
                         inst: conditionBalance.address
                     };
                     return [4 /*yield*/, conditionBalance.getConditionData(dsaAddress, constants_1.constants.DAI, dai_amount, true)];
                 case 7:
-                    enoughDAICondition = new (_d.apply(_c, [void 0, (_h.data = _k.sent(),
-                            _h)]))();
+                    enoughDAICondition = new (_d.apply(_c, [void 0, (_k.data = _o.sent(),
+                            _k)]))();
+                    _f = (_e = GelatoCoreLib.Condition).bind;
+                    _l = {
+                        inst: conditionHasOpenMakerVault.address
+                    };
+                    return [4 /*yield*/, conditionHasOpenMakerVault.getConditionData(dsaAddress)];
+                case 8:
+                    hasMakerVaultCondition = new (_f.apply(_e, [void 0, (_l.data = _o.sent(),
+                            _l)]))();
                     spells = [];
                     connectorPaybackMakerVault = new GelatoCoreLib.Action({
                         addr: constants_1.constants.ConnectMaker,
@@ -137,7 +147,7 @@ function createGelatoOptimizer(web3, dsaAddress, eth_amount, dai_amount, mockCDA
                     GAS_LIMIT = "4000000";
                     GAS_PRICE_CEIL = ethers_1.ethers.utils.parseUnits("1000", "gwei");
                     taskRefinanceMakerToCompoundIfBetter = new GelatoCoreLib.Task({
-                        conditions: [rebalanceCondition, enoughDAICondition],
+                        conditions: [rebalanceCondition, enoughDAICondition, hasMakerVaultCondition],
                         actions: spells,
                         selfProviderGasLimit: GAS_LIMIT,
                         selfProviderGasPriceCeil: GAS_PRICE_CEIL,
@@ -147,23 +157,23 @@ function createGelatoOptimizer(web3, dsaAddress, eth_amount, dai_amount, mockCDA
                         //@ts-ignore
                         module: constants_1.constants.ProviderModuleDSA,
                     });
-                    _f = (_e = gelatoCore).stakeExecutor;
-                    _j = {};
+                    _h = (_g = gelatoCore).stakeExecutor;
+                    _m = {};
                     return [4 /*yield*/, gelatoCore.minExecutorStake()];
-                case 8: 
+                case 9: 
                 // ======= Executor Setup =========
                 // For local Testing purposes our test User account will play the role of the Gelato
                 // Executor network because this logic is non-trivial to fork into a local instance
-                return [4 /*yield*/, _f.apply(_e, [(_j.value = _k.sent(),
-                            _j)])];
-                case 9:
+                return [4 /*yield*/, _h.apply(_g, [(_m.value = _o.sent(),
+                            _m)])];
+                case 10:
                     // ======= Executor Setup =========
                     // For local Testing purposes our test User account will play the role of the Gelato
                     // Executor network because this logic is non-trivial to fork into a local instance
-                    _k.sent();
+                    _o.sent();
                     return [4 /*yield*/, gelatoCore.minExecProviderFunds(GAS_LIMIT, GAS_PRICE_CEIL)];
-                case 10:
-                    TASK_AUTOMATION_FUNDS = _k.sent();
+                case 11:
+                    TASK_AUTOMATION_FUNDS = _o.sent();
                     return [4 /*yield*/, dsa.cast(
                         //@ts-ignore
                         [constants_1.constants.ConnectGelato], // targets
@@ -183,8 +193,8 @@ function createGelatoOptimizer(web3, dsaAddress, eth_amount, dai_amount, mockCDA
                             value: TASK_AUTOMATION_FUNDS,
                             gasLimit: 5000000,
                         })];
-                case 11:
-                    _k.sent();
+                case 12:
+                    _o.sent();
                     expiryDate = 0;
                     return [4 /*yield*/, dsa.cast(
                         //@ts-ignore
@@ -200,11 +210,11 @@ function createGelatoOptimizer(web3, dsaAddress, eth_amount, dai_amount, mockCDA
                         {
                             gasLimit: 5000000,
                         })];
-                case 12:
-                    _k.sent();
-                    return [4 /*yield*/, gelatoCore.currentTaskReceiptId()];
                 case 13:
-                    taskReceiptId = _k.sent();
+                    _o.sent();
+                    return [4 /*yield*/, gelatoCore.currentTaskReceiptId()];
+                case 14:
+                    taskReceiptId = _o.sent();
                     return [2 /*return*/, new GelatoCoreLib.TaskReceipt({
                             id: taskReceiptId,
                             userProxy: dsaAddress,

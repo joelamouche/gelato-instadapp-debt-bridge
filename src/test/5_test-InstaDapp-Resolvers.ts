@@ -1,5 +1,3 @@
-// running `npx buidler test` automatically makes use of buidler-waffle plugin
-
 import { createDSA } from "../lib/createDSA";
 import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
 import { createMakerVault } from "../lib/createMakerVault";
@@ -29,7 +27,8 @@ const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 const InstaMakerResolver = require("../../pre-compiles/InstaMakerResolver.json");
 const InstaCompoundResolver = require("../../pre-compiles/InstaCompoundResolver.json");
 
-const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
+const CETH_ABI = require("../../pre-compiles/CETH_ABI");
+const CDAI_ABI = require("../../pre-compiles/CDAI_ABI");
 
 describe("Test our condition source contracts", function () {
   this.timeout(0);
@@ -101,16 +100,35 @@ describe("Test our condition source contracts", function () {
     console.log('totalBorrowRate', totalBorrowRate)
 
     // Instantiate Maker Resolver contract
-    instaCompoundResolver = await ethers.getContractAt(
-      InstaCompoundResolver.abi,
-      constants.InstaCompoundResolver
-    );
-    console.log('hi')
-    //console.log('dsa.tokens', await dsaSdk.tokens)
-    let colInfo = await instaCompoundResolver.getPosition(dsaAddress, constants.CDAI)
-    console.log(colInfo)
+    // instaCompoundResolver = await ethers.getContractAt(
+    //   InstaCompoundResolver.abi,
+    //   constants.InstaCompoundResolver
+    // );
+    // console.log('hi')
+    // //console.log('dsa.tokens', await dsaSdk.tokens)
+    // let colInfo = await instaCompoundResolver.getPosition(dsaAddress, [constants.CDAI])
+    // console.log(colInfo)
     // let borrowRate = Number(colInfo.borrowRate)
     // if (borrowRate == 1e+27) { borrowRate = 0 }
     // expect(borrowRate).to.eq(lastVaultFromDSASDK)
+
+    const cDai = await ethers.getContractAt(
+      CDAI_ABI,
+      constants.CDAI
+    );
+
+    const cEth = await ethers.getContractAt(
+      CETH_ABI,
+      constants.CETH
+    );
+    let supplyRatePerBlock = await cEth.supplyRatePerBlock()
+    let borrowRatePerBlock = await cDai.borrowRatePerBlock()
+    console.log('supplyRatePerBlock', Number(supplyRatePerBlock))
+    console.log('borrowRatePerBlock', Number(borrowRatePerBlock))
+
+    //NB: use Cdai to get borrow rate??
+    //cETH:0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5
+    //https://github.com/compound-developers/compound-supply-examples/blob/master/web3-js-examples/supply-eth-via-web3.js
+    //call supplyRatePerBlock()
   });
 });

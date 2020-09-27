@@ -16,6 +16,7 @@ const ConnectMaker = require("../../pre-compiles/ConnectMaker.json");
 const ConnectCompound = require("../../pre-compiles/ConnectCompound.json");
 const ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
 const ConditionCompareUintsFromTwoSources = require("../../artifacts/ConditionCompareUintsFromTwoSources.json");
+const ConditionHasOpenMakerVault = require("../../artifacts/ConditionHasOpenMakerVault.json");
 const MockCDAI = require("../../artifacts/MockCDAI.json");
 const MockDSR = require("../../artifacts/MockDSR.json");
 
@@ -32,12 +33,14 @@ export async function createGelatoOptimizer(
   dai_amount: BigNumber,
   mockCDAIAddress: string,
   mockDSRAddress: string,
-  conditionAddress: string
+  conditionCompareAddress: string,
+  conditionHasMakerVaultAddress: string
 ) {
   let gelatoCore; //: IGelatoCore;
   let dsa;
   let conditionCompareUints;
   let conditionBalance;
+  let conditionHasOpenMakerVault;
 
   //setup ethers
   let provider = new ethers.providers.Web3Provider(web3.currentProvider as any);
@@ -55,13 +58,18 @@ export async function createGelatoOptimizer(
   );
   dsa = new Contract(dsaAddress, InstaAccount.abi, userWallet);
   conditionCompareUints = new Contract(
-    conditionAddress,
+    conditionCompareAddress,
     ConditionCompareUintsFromTwoSources.abi,
     userWallet
   );
   conditionBalance = new Contract(
     constants.ConditionBalance,
     ConditionBalance_ABI,
+    userWallet
+  );
+  conditionHasOpenMakerVault = new Contract(
+    conditionHasMakerVaultAddress,
+    ConditionHasOpenMakerVault.abi,
     userWallet
   );
 
@@ -99,6 +107,14 @@ export async function createGelatoOptimizer(
       true
     ),
   });
+  //Check that user has an open maker vault
+  const hasMakerVaultCondition = new GelatoCoreLib.Condition({
+    inst: conditionHasOpenMakerVault.address,
+    data: await conditionHasOpenMakerVault.getConditionData(
+      dsaAddress
+    ),
+  });
+
 
   // ======= Action/Spells setup ======
   // To assimilate to DSA SDK
@@ -160,7 +176,7 @@ export async function createGelatoOptimizer(
   const GAS_LIMIT = "4000000";
   const GAS_PRICE_CEIL = ethers.utils.parseUnits("1000", "gwei");
   const taskRefinanceMakerToCompoundIfBetter = new GelatoCoreLib.Task({
-    conditions: [rebalanceCondition, enoughDAICondition],
+    conditions: [rebalanceCondition, enoughDAICondition, hasMakerVaultCondition],
     actions: spells,
     selfProviderGasLimit: GAS_LIMIT,
     selfProviderGasPriceCeil: GAS_PRICE_CEIL,
