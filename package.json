@@ -38,7 +38,8 @@
     },
     "dependencies": {
         "@gelatonetwork/core": "^0.6.0",
-         "web3": "^1.3.0",
-        "ethers": "^5.0.14"
+        "dsa-sdk": "^1.4.43",
+        "ethers": "^5.0.14",
+        "web3": "^1.3.0"
     }
 }

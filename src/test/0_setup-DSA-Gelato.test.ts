@@ -6,7 +6,7 @@ const { ethers } = bre;
 const GelatoCoreLib = require("@gelatonetwork/core");
 import { constants } from "../constants/constants";
 
-export {};
+export { };
 
 // Constants
 const ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
@@ -20,7 +20,7 @@ const ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
 const ConnectBasic = require("../../pre-compiles/ConnectBasic.json");
 const ProviderModuleDSA_ABI = require("../../pre-compiles/ProviderModuleDSA_ABI.json");
 
-const ConnectGelato = require("../../artifacts/ConnectGelato");
+const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 
 describe("DSA setup with Gelato Tests", function () {
   this.timeout(50000);
@@ -93,7 +93,7 @@ describe("DSA setup with Gelato Tests", function () {
 
     // Instantiate ConnectGelato from mainnet
     connectGelato = await ethers.getContractAt(
-      ConnectGelato.abi,
+      ConnectGelato_ABI,
       constants.ConnectGelato
     );
 
