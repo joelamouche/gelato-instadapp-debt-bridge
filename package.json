@@ -10,7 +10,7 @@
     "scripts": {
         "build": "npm run compile && npx buidler typechain",
         "compile": "npx buidler compile",
-        "test": "npx buidler test",
+        "test": "INFURA_ID=$INFURA_ID && npx buidler test",
         "compileJs": "rm -rf dist && tsc",
         "cleanInstall": "rm -rf node_modules && rm package-lock.json && npm install"
     },
