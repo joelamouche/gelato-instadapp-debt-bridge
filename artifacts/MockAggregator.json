@@ -1,0 +1,46 @@
+{
+  "contractName": "MockAggregator",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_ethusd",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "ethusd",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_ethusd",
+          "type": "uint256"
+        }
+      ],
+      "name": "setETHUSD",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b506040516100f23803806100f28339818101604052602081101561003357600080fd5b505160005560ac806100466000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c806361150aae146037578063e230dfbd14604f575b600080fd5b603d606b565b60408051918252519081900360200190f35b606960048036036020811015606357600080fd5b50356071565b005b60005481565b60005556fea26469706673582212202092e1be5cacee459addc7523891a74c1b43add16f4f976b3bf373e344ee2ef264736f6c634300060c0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c806361150aae146037578063e230dfbd14604f575b600080fd5b603d606b565b60408051918252519081900360200190f35b606960048036036020811015606357600080fd5b50356071565b005b60005481565b60005556fea26469706673582212202092e1be5cacee459addc7523891a74c1b43add16f4f976b3bf373e344ee2ef264736f6c634300060c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
