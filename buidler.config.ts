@@ -185,10 +185,16 @@ task(
     );
     const conditionCompareUints = await ConditionCompareUintsFromTwoSources.deploy();
     await conditionCompareUints.deployed();
+    const ConditionHasMakerVault = await ethers.getContractFactory(
+        "ConditionHasOpenMakerVault"
+    );
+    const conditionHasMakerVault = await ConditionHasMakerVault.deploy();
+    await conditionHasMakerVault.deployed();
     const addresses = {
         mockCDAI: mockCDAI.address,
         mockDSR: mockDSR.address,
         conditionAddress: conditionCompareUints.address,
+        conditionHasMakerVault: conditionHasMakerVault.address,
     };
     writeFileSync("addresses.txt", JSON.stringify(addresses));
 });
