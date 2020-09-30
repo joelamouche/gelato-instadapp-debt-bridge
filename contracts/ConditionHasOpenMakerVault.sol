@@ -10,10 +10,25 @@ import {
 } from "@gelatonetwork/core/contracts/gelato_core/interfaces/IGelatoCore.sol";
 import {GelatoBytes} from "./GelatoBytes.sol";
 
-import {InstaMakerResolver, InstaMcdAddress,CdpsLike} from "./InstaMakerResolver.sol";
+//import {InstaMakerResolver, InstaMcdAddress,CdpsLike} from "./InstaMakerResolver.sol";
+
+
+
+interface InstaMcdAddress {
+    function manager() external view returns (address);
+    function vat() external view returns (address);
+    function jug() external view returns (address);
+    function spot() external view returns (address);
+    function pot() external view returns (address);
+    function getCdps() external view returns (address);
+}
+
+interface CdpsLike {
+    function getCdpsAsc(address, address) external view returns (uint[] memory, address[] memory, bytes32[] memory);
+}
 
 /// @notice A contract to check if maker has an open vault
-contract ConditionHasOpenMakerVault is GelatoConditionsStandard, InstaMakerResolver {
+contract ConditionHasOpenMakerVault is GelatoConditionsStandard {
     /**
      * @dev get instaDapp makerReslver address
      */
@@ -48,6 +63,13 @@ contract ConditionHasOpenMakerVault is GelatoConditionsStandard, InstaMakerResol
             (address)
         );
         return hasMakerVaultOpen(owner);
+    }
+    
+    /**
+     * @dev get MakerDAO MCD Address contract
+     */
+    function getMcdAddresses() public pure returns (address) {
+        return 0xF23196DF1C440345DE07feFbe556a5eF0dcD29F0;
     }
 
 //TODO: write description

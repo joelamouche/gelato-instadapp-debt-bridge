@@ -5,7 +5,7 @@ export const constants = {
       DAI: "0x6b175474e89094c44da98b954eedeac495271d0f",
       DAI_UNISWAP: "0x2a1530C4C41db0B0b2bB646CB5Eb1A67b7158667",
       CDAI: "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
-      CETH: "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5",
+      CETH: "0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5",
       // Conditions
       ConditionBalance: "0xd69DB9852bAbf9e0bd73B8A090382573C7488154",
       // InstaDapp DSA
