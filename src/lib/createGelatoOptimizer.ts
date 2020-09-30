@@ -17,8 +17,8 @@ const ConnectCompound = require("../../pre-compiles/ConnectCompound.json");
 const ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
 const ConditionCompareUintsFromTwoSources = require("../../artifacts/ConditionCompareUintsFromTwoSources.json");
 const ConditionHasOpenMakerVault = require("../../artifacts/ConditionHasOpenMakerVault.json");
-const MockCDAI = require("../../artifacts/MockCDAI.json");
-const MockDSR = require("../../artifacts/MockDSR.json");
+const CustomCompoundInterface = require("../../artifacts/CustomCompoundInterface.json");
+const CustomMakerInterface = require("../../artifacts/CustomMakerInterface.json");
 
 const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 const ConditionBalance_ABI = require("../../pre-compiles/ConditionBalance_ABI");
@@ -31,8 +31,8 @@ export async function createGelatoOptimizer(
   dsaAddress: string,
   eth_amount: BigNumber,
   dai_amount: BigNumber,
-  mockCDAIAddress: string,
-  mockDSRAddress: string,
+  CMIAddress: string,
+  CCIAddress: string,
   conditionCompareAddress: string,
   conditionHasMakerVaultAddress: string
 ) {
@@ -90,10 +90,10 @@ export async function createGelatoOptimizer(
   const rebalanceCondition = new GelatoCoreLib.Condition({
     inst: conditionCompareUints.address,
     data: await conditionCompareUints.getConditionData(
-      mockCDAIAddress, // We are in DSR so we compare against CDAI => SourceA=CDAI
-      mockDSRAddress, // SourceB=DSR
-      abiEncodeWithSelector(MockCDAI.abi, "supplyRatePerSecond"), // CDAI data feed first (sourceAData)
-      abiEncodeWithSelector(MockDSR.abi, "dsr"), // DSR data feed second (sourceBData)
+      CMIAddress,
+      CCIAddress,
+      abiEncodeWithSelector(CustomMakerInterface.abi, "getBorrowRate"),
+      abiEncodeWithSelector(CustomCompoundInterface.abi, "getETHDAIBorrowRatePerSecond"),
       MIN_SPREAD
     ),
   });

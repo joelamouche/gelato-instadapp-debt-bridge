@@ -101,7 +101,7 @@ describe("Test our condition source contracts", function () {
     //if (borrowRate == 1e+27) { borrowRate = 0 }
     expect(borrowRatePerYear).to.eq(lastVaultFromDSASDK)
   });
-  it.only("#2: Get Compound data from onChain contract", async function () {
+  it("#2: Get Compound data from onChain contract", async function () {
     // In compound, the interest paid is the borrow rate of DAI minus the supply rate of ETH
 
     dsaAddress = await createDSA(web3);
@@ -143,7 +143,7 @@ describe("Test our condition source contracts", function () {
     // _position[_key].borrowYield = _borrowYield * 100; // Multiply with 100 to make it in percent
   });
 
-  it.only("#3: Test CustomMakerInterface", async function () {
+  it("#3: Test CustomMakerInterface", async function () {
     // Instantiate Maker Resolver contract
     let CustomMakerinterface = await ethers.getContractFactory("CustomMakerInterface");
     let customMakerinterface = await CustomMakerinterface.deploy();
@@ -163,7 +163,7 @@ describe("Test our condition source contracts", function () {
     console.log(borrowRatePerYearIMR, borrowRatePerYearCustom)
     expect(truncate5digits(borrowRatePerYearIMR)).to.eq(truncate5digits(borrowRatePerYearCustom))
   });
-  it.only("#4: Test CustomCompoundInterface", async function () {
+  it("#4: Test CustomCompoundInterface", async function () {
     // Instantiate Maker Resolver contract
     let CustomCompoundInterface = await ethers.getContractFactory("CustomCompoundInterface");
     let customCompoundInterface = await CustomCompoundInterface.deploy();
