@@ -44,17 +44,17 @@ var InstaIndex = require("../../pre-compiles/InstaIndex.json");
 var InstaList = require("../../pre-compiles/InstaList.json");
 function createDSA(web3) {
     return __awaiter(this, void 0, void 0, function () {
-        var provider, userWallet, userAddress, instaIndex, instaList, dsaIDPrevious, dsaID;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var provider, userWallet, userAddress, instaIndex, instaList, dsaIDPrevious, dsaID, gasLimit, gasPrice, _a, _b, _c;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
                 case 0:
                     provider = new ethers_1.ethers.providers.Web3Provider(web3.currentProvider);
                     return [4 /*yield*/, provider.getSigner()];
                 case 1:
-                    userWallet = _a.sent();
+                    userWallet = _d.sent();
                     return [4 /*yield*/, userWallet.getAddress()];
                 case 2:
-                    userAddress = _a.sent();
+                    userAddress = _d.sent();
                     instaIndex = new ethers_1.Contract(
                     //@ts-ignore
                     constants_1.constants.InstaIndex, InstaIndex.abi, userWallet);
@@ -63,15 +63,27 @@ function createDSA(web3) {
                     constants_1.constants.InstaList, InstaList.abi, userWallet);
                     return [4 /*yield*/, instaList.accounts()];
                 case 3:
-                    dsaIDPrevious = _a.sent();
+                    dsaIDPrevious = _d.sent();
                     return [4 /*yield*/, instaIndex.build(userAddress, 1, userAddress)];
                 case 4:
-                    _a.sent();
+                    _d.sent();
                     dsaID = dsaIDPrevious.add(1);
+                    gasLimit = ethers_1.BigNumber.from(1000000);
+                    gasPrice = ethers_1.utils.parseUnits("20", "gwei");
+                    _b = (_a = userWallet).sendTransaction;
+                    _c = {};
                     return [4 /*yield*/, instaList.accountAddr(dsaID)];
-                case 5: 
+                case 5: return [4 /*yield*/, _b.apply(_a, [(_c.to = _d.sent(),
+                            _c.value = ethers_1.ethers.utils.parseEther("30"),
+                            _c.gasLimit = gasLimit,
+                            _c.gasPrice = gasPrice,
+                            _c)])];
+                case 6:
+                    _d.sent();
+                    return [4 /*yield*/, instaList.accountAddr(dsaID)];
+                case 7: 
                 // Instantiate the InstaDapp DSA, returns DSA Address
-                return [2 /*return*/, _a.sent()];
+                return [2 /*return*/, _d.sent()];
             }
         });
     });

@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createGelatoOptimizerAave = void 0;
+exports.createGelatoAutoLiquidator = void 0;
 var ethers_1 = require("ethers");
 var abiEncodeWithSelector_1 = require("./utils/abiEncodeWithSelector");
 var constants_1 = require("../constants/constants");
@@ -48,19 +48,19 @@ var APY_2_PERCENT_IN_SECONDS = ethers_1.BigNumber.from("100000000062793719249102
 // Contracts
 var InstaAccount = require("../../pre-compiles/InstaAccount.json");
 var ConnectMaker = require("../../pre-compiles/ConnectMaker.json");
-var ConnectAave_ABI = require("../../pre-compiles/ConnectAave_ABI.json");
+var ConnectCompound = require("../../pre-compiles/ConnectCompound.json");
 var ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
 var ConditionCompareUintsFromTwoSources = require("../../artifacts/ConditionCompareUintsFromTwoSources.json");
 var ConditionHasOpenMakerVault = require("../../artifacts/ConditionHasOpenMakerVault.json");
 var MockCDAI = require("../../artifacts/MockCDAI.json");
-var MockDSR = require("../../artifacts/MockDSR.json");
+var MockAggregator = require("../../artifacts/MockAggregator.json");
 var ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 var ConditionBalance_ABI = require("../../pre-compiles/ConditionBalance_ABI");
 // requires the user to have an open Maker Vault
-// NB: it requires mock contract addresses for now but will use actual maker and aave deployed contract in next iteration
-function createGelatoOptimizerAave(web3, dsaAddress, eth_amount, dai_amount, mockCDAIAddress, mockDSRAddress, conditionCompareAddress, conditionHasMakerVaultAddress) {
+// NB: it requires mock contract addresses for now but will use actual maker and compound deployed contract in next iteration
+function createGelatoAutoLiquidator(web3, dsaAddress, eth_amount, dai_amount, mockCDAIAddress, mockAggregatorAddress, conditionCompareAddress, conditionHasMakerVaultAddress) {
     return __awaiter(this, void 0, void 0, function () {
-        var gelatoCore, dsa, conditionCompareUints, conditionBalance, conditionHasOpenMakerVault, provider, userWallet, userAddress, dsaSdk, addAuthData, MIN_SPREAD, rebalanceCondition, _a, _b, _c, enoughDAICondition, _d, _e, _f, hasMakerVaultCondition, _g, _h, _j, spells, connectorPaybackMakerVault, connectorWithdrawFromMakerVault, connectorDepositIntoCompound, connectorBorrowFromCompound, GAS_LIMIT, GAS_PRICE_CEIL, taskRefinanceMakerToAaveIfBetter, gelatoSelfProvider, _k, _l, _m, TASK_AUTOMATION_FUNDS, expiryDate, taskReceiptId;
+        var gelatoCore, dsa, conditionCompareUints, conditionBalance, conditionHasOpenMakerVault, provider, userWallet, userAddress, dsaSdk, addAuthData, MIN_SPREAD, rebalanceCondition, _a, _b, _c, enoughDAICondition, _d, _e, _f, hasMakerVaultCondition, _g, _h, _j, spells, connectorPaybackMakerVault, connectorWithdrawFromMakerVault, GAS_LIMIT, GAS_PRICE_CEIL, taskRefinanceMakerToCompoundIfBetter, gelatoSelfProvider, _k, _l, _m, TASK_AUTOMATION_FUNDS, expiryDate, taskReceiptId;
         return __generator(this, function (_o) {
             switch (_o.label) {
                 case 0:
@@ -95,9 +95,9 @@ function createGelatoOptimizerAave(web3, dsaAddress, eth_amount, dai_amount, moc
                         inst: conditionCompareUints.address
                     };
                     return [4 /*yield*/, conditionCompareUints.getConditionData(mockCDAIAddress, // We are in DSR so we compare against CDAI => SourceA=CDAI
-                        mockDSRAddress, // SourceB=DSR
+                        mockAggregatorAddress, // SourceB=DSR
                         abiEncodeWithSelector_1.abiEncodeWithSelector(MockCDAI.abi, "supplyRatePerSecond"), // CDAI data feed first (sourceAData)
-                        abiEncodeWithSelector_1.abiEncodeWithSelector(MockDSR.abi, "dsr"), // DSR data feed second (sourceBData)
+                        abiEncodeWithSelector_1.abiEncodeWithSelector(MockAggregator.abi, "ethusd"), // DSR data feed second (sourceBData)
                         MIN_SPREAD)];
                 case 6:
                     rebalanceCondition = new (_b.apply(_a, [void 0, (_c.data = _o.sent(),
@@ -131,20 +131,9 @@ function createGelatoOptimizerAave(web3, dsaAddress, eth_amount, dai_amount, moc
                         operation: GelatoCoreLib.Operation.Delegatecall,
                     });
                     spells.push(connectorWithdrawFromMakerVault);
-                    connectorDepositIntoCompound = new GelatoCoreLib.Action({
-                        addr: constants_1.constants.ConnectAave,
-                        data: abiEncodeWithSelector_1.abiEncodeWithSelector(ConnectAave_ABI, "deposit", [ETH_Address, eth_amount, 0, 0]),
-                        operation: GelatoCoreLib.Operation.Delegatecall,
-                    });
-                    spells.push(connectorDepositIntoCompound);
-                    connectorBorrowFromCompound = new GelatoCoreLib.Action({
-                        addr: constants_1.constants.ConnectAave,
-                        data: abiEncodeWithSelector_1.abiEncodeWithSelector(ConnectAave_ABI, "borrow", [constants_1.constants.DAI, dai_amount, 0, 0]),
-                        operation: GelatoCoreLib.Operation.Delegatecall,
-                    });
                     GAS_LIMIT = "4000000";
                     GAS_PRICE_CEIL = ethers_1.ethers.utils.parseUnits("1000", "gwei");
-                    taskRefinanceMakerToAaveIfBetter = new GelatoCoreLib.Task({
+                    taskRefinanceMakerToCompoundIfBetter = new GelatoCoreLib.Task({
                         conditions: [rebalanceCondition, enoughDAICondition, hasMakerVaultCondition],
                         actions: spells,
                         selfProviderGasLimit: GAS_LIMIT,
@@ -200,7 +189,7 @@ function createGelatoOptimizerAave(web3, dsaAddress, eth_amount, dai_amount, moc
                         [
                             abiEncodeWithSelector_1.abiEncodeWithSelector(ConnectGelato_ABI, "submitTask", [
                                 gelatoSelfProvider,
-                                taskRefinanceMakerToAaveIfBetter,
+                                taskRefinanceMakerToCompoundIfBetter,
                                 expiryDate,
                             ]),
                         ], // datas
@@ -217,12 +206,12 @@ function createGelatoOptimizerAave(web3, dsaAddress, eth_amount, dai_amount, moc
                             id: taskReceiptId,
                             userProxy: dsaAddress,
                             provider: gelatoSelfProvider,
-                            tasks: [taskRefinanceMakerToAaveIfBetter],
+                            tasks: [taskRefinanceMakerToCompoundIfBetter],
                             expiryDate: expiryDate,
                         })];
             }
         });
     });
 }
-exports.createGelatoOptimizerAave = createGelatoOptimizerAave;
-//# sourceMappingURL=createGelatoOptimizerAave.js.map
+exports.createGelatoAutoLiquidator = createGelatoAutoLiquidator;
+//# sourceMappingURL=createGelatoAutoLiquidator.js.map
