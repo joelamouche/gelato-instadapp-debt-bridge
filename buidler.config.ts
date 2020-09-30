@@ -12,6 +12,7 @@ const { utils } = require("ethers");
 
 const GelatoCoreLib = require("@gelatonetwork/core");
 import { constants } from "./src/constants/constants";
+import { writeFileSync } from "fs";
 
 // Process Env Variables
 require("dotenv").config();
@@ -184,7 +185,10 @@ task(
     );
     const conditionCompareUints = await ConditionCompareUintsFromTwoSources.deploy();
     await conditionCompareUints.deployed();
-    console.log(mockCDAI.address);
-    console.log(mockDSR.address);
-    console.log(conditionCompareUints.address);
+    const addresses = {
+        mockCDAI: mockCDAI.address,
+        mockDSR: mockDSR.address,
+        conditionAddress: conditionCompareUints.address,
+    };
+    writeFileSync("addresses.txt", JSON.stringify(addresses));
 });
