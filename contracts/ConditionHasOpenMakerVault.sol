@@ -17,9 +17,9 @@ contract ConditionHasOpenMakerVault is GelatoConditionsStandard, InstaMakerResol
     /**
      * @dev get instaDapp makerReslver address
      */
-    function getIMRAddresses() public pure returns (address) {
-        return 0x0A7008B38E7015F8C36A49eEbc32513ECA8801E5;
-    }
+    // function getIMRAddresses() public pure returns (address) {
+    //     return 0x0A7008B38E7015F8C36A49eEbc32513ECA8801E5;
+    // }
 
     /// @notice Helper to encode the Condition data field off-chain
     function getConditionData(

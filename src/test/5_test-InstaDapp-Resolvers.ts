@@ -7,7 +7,7 @@ const { expect } = require("chai");
 const bre = require("@nomiclabs/buidler");
 const { ethers } = bre;
 const GelatoCoreLib = require("@gelatonetwork/core");
-const { BigNumber } = require("ethers");
+import { BigNumber } from "ethers"
 const DSA = require("dsa-sdk");
 const Web3 = require("web3");
 import { constants } from "../constants/constants";
@@ -55,10 +55,16 @@ describe("Test our condition source contracts", function () {
   let mockCDAI;
   let conditionCompareUints;
 
+  function calRate(ilkRate) {
+    ilkRate = Number(ilkRate) / 10 ** 27;
+    return ilkRate ** 31545000 - 1;
+  }
+
+
   before(async function () { });
 
   it("#1: Get Maker Vault data from onChain contract", async function () {
-    //verify here https://oasis.app/borrow/owner/0xf2a2e600eb309a5d8a17c18756f65608bd5ce5db
+    //verify here https://oasis.app/borrow/markets
 
     dsaAddress = await createDSA(web3);
     [userWallet] = await ethers.getSigners();
@@ -78,10 +84,12 @@ describe("Test our condition source contracts", function () {
       constants.InstaMakerResolver
     );
 
+    // gets borrow rate per seconde
     let colInfo = (await instaMakerResolver.getColInfo(["ETH-A"]))[0]
-    let borrowRate = Number(colInfo.borrowRate)
-    if (borrowRate == 1e+27) { borrowRate = 0 }
-    expect(borrowRate).to.eq(lastVaultFromDSASDK)
+    let borrowRatePerYear = calRate(colInfo.borrowRate) * 100
+    console.log("borrowRatePerYear", borrowRatePerYear)
+    //if (borrowRate == 1e+27) { borrowRate = 0 }
+    expect(borrowRatePerYear).to.eq(lastVaultFromDSASDK)
   });
   it("#2: Get Compound data from onChain contract", async function () {
     // In compound, the interest paid is the borrow rate of DAI minus the supply rate of ETH
@@ -113,5 +121,33 @@ describe("Test our condition source contracts", function () {
     //cETH:0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5
     //https://github.com/compound-developers/compound-supply-examples/blob/master/web3-js-examples/supply-eth-via-web3.js
     //call supplyRatePerBlock()
+
+    // from https://github.com/InstaDApp/dsa-sdk/blob/master/src/resolvers/compound.js
+    //with res5 and 6 supply and borrow rates per block 2102400 is number of block per year if 15sec block
+    // _position[_key].supplyRate = _supplyRate * 100; // Multiply with 100 to make it in percent
+    // var _supplyYield = (1 + _supplyRate / 365) ** 365 - 1;
+    // _position[_key].supplyYield = _supplyYield * 100; // Multiply with 100 to make it in percent
+    // var _borrowRate = (_res[6] * 2102400) / 1e18;
+    // _position[_key].borrowRate = _borrowRate * 100; // Multiply with 100 to make it in percent
+    // var _borrowYield = (1 + _borrowRate / 365) ** 365 - 1;
+    // _position[_key].borrowYield = _borrowYield * 100; // Multiply with 100 to make it in percent
+  });
+
+  it.only("#3: Test CustomMakerInterface", async function () {
+    // Instantiate Maker Resolver contract
+    let CustomMakerinterface = await ethers.getContractFactory("CustomMakerInterface");
+    let customMakerinterface = await CustomMakerinterface.deploy();
+    await customMakerinterface.deployed();
+
+    let borrowRatePerSec: BigNumber = await customMakerinterface.getBorrowRate()
+    console.log(borrowRatePerSec)
+    // gets borrow rate per second
+    instaMakerResolver = await ethers.getContractAt(
+      InstaMakerResolver.abi,
+      constants.InstaMakerResolver
+    );
+    let colInfo = (await instaMakerResolver.getColInfo(["ETH-A"]))[0]
+    console.log(Number(colInfo.borrowRate), Number(borrowRatePerSec.mul(1e9)))
+    expect(Number(colInfo.borrowRate)).to.eq(Number(borrowRatePerSec.mul(1e9)))
   });
 });
