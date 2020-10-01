@@ -219,10 +219,10 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
 
     // We defined a MIN_SPREAD of 10000000 points in the per second rate
     // for our ConditionCompareUintsFromTwoSources. So we now
-    // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockCCI.dsr
+    // set the Maker.borrowRatePerSecond to be 10000000 higher than MockCCI.borrowRatePerSecond
     // and expect it to mean that our Task becomes executable.
-    await mockCMI.setSupplyRatePerSecond(
-      (await mockCCI.dsr()).add(MIN_SPREAD)
+    await mockCMI.setBorrowRatePerSecond(
+      (await mockCCI.borrowRatePerSecond()).add(MIN_SPREAD)
     );
     expect(
       await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)

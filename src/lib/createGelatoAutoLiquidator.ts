@@ -19,6 +19,7 @@ const ConditionCompareUintsFromTwoSources = require("../../artifacts/ConditionCo
 const ConditionHasOpenMakerVault = require("../../artifacts/ConditionHasOpenMakerVault.json");
 const MockCDAI = require("../../artifacts/MockCDAI.json");
 const MockAggregator = require("../../artifacts/MockAggregator.json");
+const CustomMakerInterface = require("../../artifacts/CustomMakerInterface.json");
 
 const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 const ConditionBalance_ABI = require("../../pre-compiles/ConditionBalance_ABI");
@@ -31,7 +32,7 @@ export async function createGelatoAutoLiquidator(
   dsaAddress: string,
   eth_amount: BigNumber,
   dai_amount: BigNumber,
-  mockCDAIAddress: string,
+  CMIAddress: string,
   mockAggregatorAddress: string,
   conditionCompareAddress: string,
   conditionHasMakerVaultAddress: string
@@ -91,9 +92,9 @@ export async function createGelatoAutoLiquidator(
   const rebalanceCondition = new GelatoCoreLib.Condition({
     inst: conditionCompareUints.address,
     data: await conditionCompareUints.getConditionData(
-      mockCDAIAddress, // We are in DSR so we compare against CDAI => SourceA=CDAI
+      CMIAddress, // We are in DSR so we compare against CDAI => SourceA=CDAI
       mockAggregatorAddress, // SourceB=DSR
-      abiEncodeWithSelector(MockCDAI.abi, "supplyRatePerSecond"), // CDAI data feed first (sourceAData)
+      abiEncodeWithSelector(CustomMakerInterface.abi, "getBorrowRate"), // CDAI data feed first (sourceAData)
       abiEncodeWithSelector(MockAggregator.abi, "ethusd"), // DSR data feed second (sourceBData)
       MIN_SPREAD
     ),

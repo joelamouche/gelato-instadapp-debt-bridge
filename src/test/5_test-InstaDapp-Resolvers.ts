@@ -30,6 +30,9 @@ const InstaCompoundResolver = require("../../pre-compiles/InstaCompoundResolver.
 const CETH_ABI = require("../../pre-compiles/CETH_ABI");
 const CDAI_ABI = require("../../pre-compiles/CDAI_ABI");
 
+const CustomMakerInterface = require("../../artifacts/CustomMakerInterface.json")
+const CustomCompoundInterface = require("../../artifacts/CustomCompoundInterface.json")
+
 describe("Test our condition source contracts", function () {
   this.timeout(0);
   if (bre.network.name !== "ganache") {
@@ -55,6 +58,13 @@ describe("Test our condition source contracts", function () {
   let mockCDAI;
   let conditionCompareUints;
 
+  let addresses;
+
+  // Rates
+  let borrowRatePerYearIMR: number;
+  let borrowRatePerSecCMI: BigNumber
+  let totalBorrowRatePerBlockCTokenContracts: BigNumber
+
   function calRate(_ilkRate: BigNumber): number {
     let ilkRate = Number(_ilkRate) / 10 ** 27;
     return ilkRate ** 31545000 - 1;
@@ -71,14 +81,14 @@ describe("Test our condition source contracts", function () {
   }
 
 
-  before(async function () { });
+  before(async function () {
+    dsaAddress = await createDSA(web3);
+    addresses = await bre.run("deployContractsMainNet")
+    console.log('Contracts Deployed !')
+  });
 
   it("#1: Get Maker Vault data from onChain contract", async function () {
     //verify here https://oasis.app/borrow/markets
-
-    dsaAddress = await createDSA(web3);
-    [userWallet] = await ethers.getSigners();
-
     // create vault
     let vaults = await createMakerVault(web3, dsaAddress, ETH_10, DAI_150);
 
@@ -96,22 +106,18 @@ describe("Test our condition source contracts", function () {
 
     // gets borrow rate per seconde
     let colInfo = (await instaMakerResolver.getColInfo(["ETH-A"]))[0]
-    let borrowRatePerYear = calRate(colInfo.borrowRate) * 100
-    console.log("borrowRatePerYear", borrowRatePerYear)
+    borrowRatePerYearIMR = calRate(colInfo.borrowRate) * 100
+    console.log("borrowRatePerYearIMR", borrowRatePerYearIMR)
     //if (borrowRate == 1e+27) { borrowRate = 0 }
-    expect(borrowRatePerYear).to.eq(lastVaultFromDSASDK)
+    expect(borrowRatePerYearIMR).to.eq(lastVaultFromDSASDK)
   });
   it("#2: Get Compound data from onChain contract", async function () {
     // In compound, the interest paid is the borrow rate of DAI minus the supply rate of ETH
 
-    dsaAddress = await createDSA(web3);
-    [userWallet] = await ethers.getSigners();
-
-    const ethSupplyRate = (await dsaSdk.compound.getPosition(dsaAddress)).eth.supplyRate
-    const daiBorrowRate = (await dsaSdk.compound.getPosition(dsaAddress)).dai.borrowRate
-    console.log('ethSupplyRate', ethSupplyRate, 'daiBorrowRate', daiBorrowRate)
-    const totalBorrowRate = daiBorrowRate - ethSupplyRate
-    console.log('totalBorrowRate', totalBorrowRate)
+    const ethSupplyRate: number = (await dsaSdk.compound.getPosition(dsaAddress)).eth.supplyRate
+    const daiBorrowRate: number = (await dsaSdk.compound.getPosition(dsaAddress)).dai.borrowRate
+    const totalBorrowRateCompoundSDK: number = daiBorrowRate - ethSupplyRate
+    console.log('totalBorrowRateCompoundSDK', totalBorrowRateCompoundSDK)
 
     const cDai = await ethers.getContractAt(
       CDAI_ABI,
@@ -122,64 +128,48 @@ describe("Test our condition source contracts", function () {
       CETH_ABI,
       constants.CETH
     );
-    let supplyRatePerBlock = await cEth.supplyRatePerBlock()
-    let borrowRatePerBlock = await cDai.borrowRatePerBlock()
-    console.log('supplyRatePerBlock', Number(supplyRatePerBlock))
-    console.log('borrowRatePerBlock', Number(borrowRatePerBlock))
 
-    //NB: use Cdai to get borrow rate??
-    //cETH:0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5
-    //https://github.com/compound-developers/compound-supply-examples/blob/master/web3-js-examples/supply-eth-via-web3.js
-    //call supplyRatePerBlock()
-
-    // from https://github.com/InstaDApp/dsa-sdk/blob/master/src/resolvers/compound.js
-    //with res5 and 6 supply and borrow rates per block 2102400 is number of block per year if 15sec block
-    // _position[_key].supplyRate = _supplyRate * 100; // Multiply with 100 to make it in percent
-    // var _supplyYield = (1 + _supplyRate / 365) ** 365 - 1;
-    // _position[_key].supplyYield = _supplyYield * 100; // Multiply with 100 to make it in percent
-    // var _borrowRate = (_res[6] * 2102400) / 1e18;
-    // _position[_key].borrowRate = _borrowRate * 100; // Multiply with 100 to make it in percent
-    // var _borrowYield = (1 + _borrowRate / 365) ** 365 - 1;
-    // _position[_key].borrowYield = _borrowYield * 100; // Multiply with 100 to make it in percent
+    // 18digits?
+    let supplyRatePerBlock: BigNumber = await cEth.supplyRatePerBlock()
+    let borrowRatePerBlock: BigNumber = await cDai.borrowRatePerBlock()
+    totalBorrowRatePerBlockCTokenContracts = borrowRatePerBlock.sub(supplyRatePerBlock)
+    let totalBorrowRatePerYearCTokenContracts: number = calRateFromRate(totalBorrowRatePerBlockCTokenContracts.mul(1e9).div(15)) * 100
+    console.log('totalBorrowRatePerYearCTokenContracts', totalBorrowRatePerYearCTokenContracts, "totalBorrowRateCompoundSDK", totalBorrowRateCompoundSDK)
+    // the borrow rate from the contract and from the sdk are the same to a 0.1 precision due to block=>second approx conversion
+    expect(truncate1digits(totalBorrowRatePerYearCTokenContracts)).to.eq(truncate1digits(totalBorrowRateCompoundSDK))
   });
 
   it("#3: Test CustomMakerInterface", async function () {
     // Instantiate Maker Resolver contract
-    let CustomMakerinterface = await ethers.getContractFactory("CustomMakerInterface");
-    let customMakerinterface = await CustomMakerinterface.deploy();
-    await customMakerinterface.deployed();
-    // gets borrow rate per second from contract, 18 digits
-    let borrowRatePerSec: BigNumber = await customMakerinterface.getBorrowRate()
-    //console.log(borrowRatePerSec)
-    // gets borrow rate per second from IMR contract, 27 digits
-    instaMakerResolver = await ethers.getContractAt(
-      InstaMakerResolver.abi,
-      constants.InstaMakerResolver
+    let customMakerInterface = await ethers.getContractAt(
+      CustomMakerInterface.abi,
+      addresses.customMakerInterface
     );
-    let colInfo = (await instaMakerResolver.getColInfo(["ETH-A"]))[0]
-    let borrowRatePerYearIMR = calRate(colInfo.borrowRate) * 100
-    let borrowRatePerYearCustom = calRateFromRate(borrowRatePerSec.mul(1e9)) * 100
-    console.log(Number(colInfo.borrowRate), Number(borrowRatePerSec.mul(1e9)))
-    console.log(borrowRatePerYearIMR, borrowRatePerYearCustom)
+
+    // gets borrow rate per second from contract, 18 digits
+    borrowRatePerSecCMI = await customMakerInterface.getBorrowRate()
+
+    // gets borrow rate per second from IMR contract, 27 digits
+    let borrowRatePerYearCustom = calRateFromRate(borrowRatePerSecCMI.mul(1e9)) * 100
+
+    // expect a 0.00001 precision with IMR result
     expect(truncate5digits(borrowRatePerYearIMR)).to.eq(truncate5digits(borrowRatePerYearCustom))
   });
   it("#4: Test CustomCompoundInterface", async function () {
     // Instantiate Maker Resolver contract
-    let CustomCompoundInterface = await ethers.getContractFactory("CustomCompoundInterface");
-    let customCompoundInterface = await CustomCompoundInterface.deploy();
-    await customCompoundInterface.deployed();
-    // gets borrow rate per second from contract, 18 digits
-    let borrowRatePerSec: BigNumber = await customCompoundInterface.getETHDAIBorrowRatePerSecond()
-    console.log('borrowRatePerSec', Number(borrowRatePerSec.mul(1e9)), calRateFromRate(borrowRatePerSec.mul(1e9)) * 100)
-    // 
-    dsaAddress = await createDSA(web3);
-    [userWallet] = await ethers.getSigners();
+    let customCompoundInterface = await ethers.getContractAt(
+      CustomCompoundInterface.abi,
+      addresses.customCompoundInterface
+    );
 
-    const ethSupplyRate = (await dsaSdk.compound.getPosition(dsaAddress)).eth.supplyRate
-    const daiBorrowRate = (await dsaSdk.compound.getPosition(dsaAddress)).dai.borrowRate
-    console.log('ethSupplyRate', ethSupplyRate, 'daiBorrowRate', daiBorrowRate)
-    const totalBorrowRate = daiBorrowRate - ethSupplyRate
-    console.log('totalBorrowRate', totalBorrowRate)
-    expect(truncate1digits(calRateFromRate(borrowRatePerSec.mul(1e9)) * 100)).to.eq(truncate1digits(totalBorrowRate))
+    // gets borrow rate per second from contract, 18 digits
+    let borrowRatePerSecCCI: BigNumber = await customCompoundInterface.getETHDAIBorrowRatePerSecond()
+
+    const ethSupplyRateSDK = (await dsaSdk.compound.getPosition(dsaAddress)).eth.supplyRate
+    const daiBorrowRateSDK = (await dsaSdk.compound.getPosition(dsaAddress)).dai.borrowRate
+    const totalBorrowRateSDK = daiBorrowRateSDK - ethSupplyRateSDK
+    console.log('totalBorrowRateSDK', totalBorrowRateSDK)
+    // expect a 0.1 precision between onchain approx and sdk approx
+    expect(truncate1digits(calRateFromRate(borrowRatePerSecCCI.mul(1e9)) * 100)).to.eq(truncate1digits(totalBorrowRateSDK))
   });
 });
