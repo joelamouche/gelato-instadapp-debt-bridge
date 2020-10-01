@@ -10,10 +10,6 @@ import {
 } from "@gelatonetwork/core/contracts/gelato_core/interfaces/IGelatoCore.sol";
 import {GelatoBytes} from "./GelatoBytes.sol";
 
-//import {InstaMakerResolver, InstaMcdAddress,CdpsLike} from "./InstaMakerResolver.sol";
-
-
-
 interface InstaMcdAddress {
     function manager() external view returns (address);
     function vat() external view returns (address);
@@ -27,14 +23,8 @@ interface CdpsLike {
     function getCdpsAsc(address, address) external view returns (uint[] memory, address[] memory, bytes32[] memory);
 }
 
-/// @notice A contract to check if maker has an open vault
+/// @notice A contract to check if maker has an open vault. This is a standard gelato condition contract
 contract ConditionHasOpenMakerVault is GelatoConditionsStandard {
-    /**
-     * @dev get instaDapp makerReslver address
-     */
-    // function getIMRAddresses() public pure returns (address) {
-    //     return 0x0A7008B38E7015F8C36A49eEbc32513ECA8801E5;
-    // }
 
     /// @notice Helper to encode the Condition data field off-chain
     function getConditionData(
@@ -72,7 +62,10 @@ contract ConditionHasOpenMakerVault is GelatoConditionsStandard {
         return 0xF23196DF1C440345DE07feFbe556a5eF0dcD29F0;
     }
 
-//TODO: write description
+    
+    /**
+     * @dev tests if the user has an open maker vault
+     */
     function hasMakerVaultOpen(
         address owner
     )

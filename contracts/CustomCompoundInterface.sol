@@ -10,6 +10,7 @@ interface ICToken {
     function supplyRatePerBlock() external view returns (uint);
 }
 
+/// @notice This contract is used to get a formatted 18 digits borrow rate per second for ETH deposit and DAI borrow on Compound
 contract CustomCompoundInterface {
     
     using SafeMath for uint256;
@@ -29,8 +30,8 @@ contract CustomCompoundInterface {
     }
 
 
-    /// @dev Uget current Maker borrow rate
-    // returns rate per second,18 digits instead of 27 digits
+    /// @dev Get current Compound borrow rate for ETH deposit and DAI borrow
+    // returns rate per second, 18 digits instead of 27 digits
     function getETHDAIBorrowRatePerSecond() public view returns (uint256)  {
         //get supply and borrow rates
         ICToken cDai=ICToken(getCDaiAddress());

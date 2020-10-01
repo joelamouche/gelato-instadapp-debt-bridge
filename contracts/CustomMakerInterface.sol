@@ -1,8 +1,6 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
-
-//import {InstaMakerResolver, InstaMcdAddress,CdpsLike,Helpers} from "./InstaMakerResolver.sol";
 import {SafeMath} from "@gelatonetwork/core/contracts/external/SafeMath.sol";
 
 
@@ -20,7 +18,7 @@ interface InstaMcdAddress {
     function getCdps() external view returns (address);
 }
 
-
+/// @notice This contract is used to get a formatted 18 digits borrow rate per second for ETH vaults in MakerDao
 contract CustomMakerInterface {
     
     using SafeMath for uint256;
@@ -32,7 +30,9 @@ contract CustomMakerInterface {
         return 0xF23196DF1C440345DE07feFbe556a5eF0dcD29F0;
     }
 
-
+    /**
+     * @dev get maker borrow rate for a collateral
+     */
     function getFee(bytes32 ilk) internal view returns (uint fee) {
         address jug = InstaMcdAddress(getMcdAddresses()).jug();
         (uint duty,) = JugLike(jug).ilks(ilk);
@@ -40,7 +40,7 @@ contract CustomMakerInterface {
         fee = duty.add(base);
     }
 
-    /// @dev Uget current Maker borrow rate
+    /// @dev Get current Maker borrow rate for ETH collateral
     // returns rate per second,18 digits instead of 27 digits
     function getBorrowRate() public view returns (uint256)  {
         uint256 fee=getFee("ETH-A");
