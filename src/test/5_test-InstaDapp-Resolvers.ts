@@ -1,12 +1,10 @@
 import { createDSA } from "../lib/createDSA";
-import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
 import { createMakerVault } from "../lib/createMakerVault";
 
 // => only dependency we need is "chai"
 const { expect } = require("chai");
 const bre = require("@nomiclabs/buidler");
 const { ethers } = bre;
-const GelatoCoreLib = require("@gelatonetwork/core");
 import { BigNumber } from "ethers"
 const DSA = require("dsa-sdk");
 const Web3 = require("web3");
@@ -15,17 +13,14 @@ export { };
 
 // Set up dsa sdk from instaDapp to get resolvers
 const web3 = new Web3("http://localhost:8545");
-const ETH_Address = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 const dsaSdk = new DSA(web3);
 
 // Constants
 const ETH_10 = ethers.utils.parseEther("10");
 const DAI_150 = ethers.utils.parseUnits("150", 18);
-const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 
 // Contracts
 const InstaMakerResolver = require("../../pre-compiles/InstaMakerResolver.json");
-const InstaCompoundResolver = require("../../pre-compiles/InstaCompoundResolver.json");
 
 const CETH_ABI = require("../../pre-compiles/CETH_ABI");
 const CDAI_ABI = require("../../pre-compiles/CDAI_ABI");

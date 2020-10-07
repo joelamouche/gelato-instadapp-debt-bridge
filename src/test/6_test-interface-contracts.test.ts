@@ -1,36 +1,8 @@
-// running `npx buidler test` automatically makes use of buidler-waffle plugin
-
-import { createDSA } from "../lib/createDSA";
-import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
-import { createMakerVault } from "../lib/createMakerVault";
-
-// => only dependency we need is "chai"
 const { expect } = require("chai");
 const bre = require("@nomiclabs/buidler");
 const { ethers } = bre;
-const GelatoCoreLib = require("@gelatonetwork/core");
 import { BigNumber } from "ethers";
-const DSA = require("dsa-sdk");
-const Web3 = require("web3");
-import { constants } from "../constants/constants";
 export { };
-
-// Set up dsa sdk from instaDapp to get resolvers
-const web3 = new Web3("http://localhost:8545");
-const dsaSdk = new DSA(web3);
-
-// Constants
-const ETH_10 = ethers.utils.parseEther("10");
-const DAI_150 = ethers.utils.parseUnits("150", 18);
-const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
-
-// Contracts
-const InstaAccount = require("../../pre-compiles/InstaAccount.json");
-const ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
-const IERC20 = require("../../pre-compiles/IERC20.json");
-const ProviderModuleDSA_ABI = require("../../pre-compiles/ProviderModuleDSA_ABI.json");
-
-const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 
 describe("Test interface contracts for edge cases", function () {
     this.timeout(0);
@@ -41,20 +13,10 @@ describe("Test interface contracts for edge cases", function () {
     // Wallet to use for local testing
     let userWallet;
     let userAddress: string;
-    let dsaAddress: string;
-
-    // Deployed instances
-    let gelatoCore;
-    let dai;
-    let connectGelato;
-    let providerModuleDSA;
 
     // Contracts to deploy and use for local testing
-    let dsa;
     let testCCI;
     let testCMI;
-    let conditionCompareUints;
-    let conditionHasMakerVault;
 
     before(async function () {
         // Get Test Wallet for local testnet

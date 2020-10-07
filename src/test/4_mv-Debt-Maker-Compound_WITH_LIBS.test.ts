@@ -4,7 +4,6 @@ import { createDSA } from "../lib/createDSA";
 import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
 import { createMakerVault } from "../lib/createMakerVault";
 
-// => only dependency we need is "chai"
 const { expect } = require("chai");
 const bre = require("@nomiclabs/buidler");
 const { ethers } = bre;

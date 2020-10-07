@@ -3,16 +3,12 @@ import { BigNumber, Contract } from "ethers";
 
 import { createDSA } from "../lib/createDSA";
 import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
-import { createGelatoOptimizerAave } from "../lib/createGelatoOptimizerAave";
 import { createGelatoAutoLiquidator } from "../lib/createGelatoAutoLiquidator";
 import { createMakerVault } from "../lib/createMakerVault";
 import { AccountInterface } from "../../typechain/AccountInterface";
 import { Ierc20 } from "../../typechain/Ierc20";
 import { constants } from "../constants/constants";
 const GelatoCoreLib = require("@gelatonetwork/core");
-
-import { abiEncodeWithSelector } from "../lib/utils/abiEncodeWithSelector";
-const ConnectAave_ABI = require("../../pre-compiles/ConnectAave_ABI.json");
 
 // => only dependency we need is "chai"
 const { expect } = require("chai");
