@@ -11,33 +11,52 @@ interface ICToken {
 }
 
 /// @notice This contract is used to get a formatted 18 digits borrow rate per second for ETH deposit and DAI borrow on Compound
-contract CustomCompoundInterface {
+contract TestCCI {
     
     using SafeMath for uint256;
+
+    uint256 public supplyRate;
+    uint256 public borrowRate;
+    constructor(uint256 _supplyRate, uint256 _borrowRate) public {  
+        supplyRate = _supplyRate; 
+        borrowRate = _borrowRate; 
+        }
     
     /**
-     * @dev get CDai Address contract
+     * @dev get ceth supply rate
      */
-    function getCDaiAddress() public pure returns (address) {
-        return 0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643;
+    function getSupplyRate() internal view returns (uint256) {
+        return supplyRate;
     }
-
+    
     /**
-     * @dev get CEth Address contract
+     * @dev get cdai borrow rate
      */
-    function getCEthAddress() public pure returns (address) {
-        return 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
+    function getBorrowRate() internal view returns (uint256) {
+        return borrowRate;
+    }
+    
+    /**
+     * @dev set ceth supply rate
+     */
+    function setSupplyRate(uint256 _supplyRate) public {
+        supplyRate = _supplyRate; 
+    }
+    
+    /**
+     * @dev set ceth supply rate
+     */
+    function setBorrowRate(uint256 _borrowRate) public {
+        borrowRate = _borrowRate; 
     }
 
 
     /// @dev Get current Compound borrow rate for ETH deposit and DAI borrow
-    // returns rate per second, assuming 15 second blocks
+    // returns rate per second, 18 digits instead of 27 digits
     function getETHDAIBorrowRatePerSecond() public view returns (uint256)  {
         //get supply and borrow rates
-        ICToken cDai=ICToken(getCDaiAddress());
-        ICToken cEth=ICToken(getCEthAddress());
-        uint256 cDaiBorrowRatePerBlock=cDai.borrowRatePerBlock();
-        uint256 cEthSupplyRatePerBlock=cEth.supplyRatePerBlock();
+        uint256 cDaiBorrowRatePerBlock=getBorrowRate();
+        uint256 cEthSupplyRatePerBlock=getSupplyRate();
         uint256 totalBorrowratePerBlock;
         if (cEthSupplyRatePerBlock>cDaiBorrowRatePerBlock){
             totalBorrowratePerBlock=0;

@@ -78,7 +78,7 @@ contract ConditionHasOpenMakerVault is GelatoConditionsStandard {
         address manager = InstaMcdAddress(getMcdAddresses()).manager();
         address cdpManger = InstaMcdAddress(getMcdAddresses()).getCdps();
 
-        (uint[] memory ids, address[] memory urns, bytes32[] memory ilks) = CdpsLike(cdpManger).getCdpsAsc(manager, owner);
+        (uint[] memory ids, , ) = CdpsLike(cdpManger).getCdpsAsc(manager, owner);
         if (ids.length==0){return "No open vault";} else {return OK;}
     }
 }

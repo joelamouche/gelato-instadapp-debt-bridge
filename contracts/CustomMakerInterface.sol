@@ -44,6 +44,11 @@ contract CustomMakerInterface {
     // returns rate per second,18 digits instead of 27 digits
     function getBorrowRate() public view returns (uint256)  {
         uint256 fee=getFee("ETH-A");
-        return fee.div(1000000000).sub(1000000000000000000);
+        if (fee<uint256(1000000000000000000000000000)){
+            // Fee is not supposed to be under 1 (e27) (fee=1+rate)
+            return 0;
+        } else {
+            return fee.div(1000000000).sub(1000000000000000000);
+        }
     }
 }
