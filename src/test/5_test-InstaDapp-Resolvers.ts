@@ -28,7 +28,7 @@ const CDAI_ABI = require("../../pre-compiles/CDAI_ABI");
 const CustomMakerInterface = require("../../artifacts/CustomMakerInterface.json")
 const CustomCompoundInterface = require("../../artifacts/CustomCompoundInterface.json")
 
-describe.only("Test our condition source contracts", function () {
+describe("Test our condition source contracts", function () {
   this.timeout(0);
   if (bre.network.name !== "ganache") {
     console.error("Test Suite is meant to be run on ganache only");
@@ -136,7 +136,7 @@ describe.only("Test our condition source contracts", function () {
     // expect a 0.00001 precision with IMR result
     expect(round5digits(borrowRatePerYearIMR)).to.eq(round5digits(borrowRatePerYearCustom))
   });
-  it.only("#4: Test CustomCompoundInterface", async function () {
+  it("#4: Test CustomCompoundInterface", async function () {
     // Instantiate Maker Resolver contract
     let customCompoundInterface = await ethers.getContractAt(
       CustomCompoundInterface.abi,
