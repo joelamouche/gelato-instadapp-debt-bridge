@@ -18,6 +18,7 @@ import { writeFileSync } from "fs";
 require("dotenv").config();
 const INFURA_ID = process.env.INFURA_ID;
 const INFURA_PRIVATE_KEY = process.env.INFURA_PRIVATE_KEY;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 assert.ok(INFURA_ID, "no Infura ID in process.env");
 
 import { BigNumber } from "ethers";
@@ -36,6 +37,11 @@ const config: BuidlerConfig = {
 
             defaultBalanceEther: 1000,
             GelatoCore: "0x1d681d76ce96E4d70a88A00EBbcfc1E47808d0b8",
+        },
+        mainnet: {
+            // Standard config
+            url: `https://:${INFURA_PRIVATE_KEY}@mainnet.infura.io/v3/${INFURA_ID}`,
+            accounts: PRIVATE_KEY ? [PRIVATE_KEY] : []
         },
     },
     solc: {
@@ -171,30 +177,84 @@ task(
     });
 
 task(
-    "deployContracts",
+    "deployContractsTestNet",
     `Returns the current gelato gas price used for calling canExec and exec`
 ).setAction(async () => {
-    const MockCDAI = await ethers.getContractFactory("MockCDAI");
-    const mockCDAI = await MockCDAI.deploy(APY_2_PERCENT_IN_SECONDS);
-    await mockCDAI.deployed();
-    const MockDSR = await ethers.getContractFactory("MockDSR");
-    const mockDSR = await MockDSR.deploy(APY_2_PERCENT_IN_SECONDS);
-    await mockDSR.deployed();
+    //MockCCI
+    const MockCCI = await ethers.getContractFactory("MockCCI");
+    const mockCCI = await MockCCI.deploy(APY_2_PERCENT_IN_SECONDS);
+    await mockCCI.deployed();
+    //MockCMI
+    const MockCMI = await ethers.getContractFactory("MockCMI");
+    const mockCMI = await MockCMI.deploy(APY_2_PERCENT_IN_SECONDS);
+    await mockCMI.deployed();
+    //conditionCompareUints
     const ConditionCompareUintsFromTwoSources = await ethers.getContractFactory(
         "ConditionCompareUintsFromTwoSources"
     );
     const conditionCompareUints = await ConditionCompareUintsFromTwoSources.deploy();
     await conditionCompareUints.deployed();
+    //conditionHasMakerVault
     const ConditionHasMakerVault = await ethers.getContractFactory(
         "ConditionHasOpenMakerVault"
     );
     const conditionHasMakerVault = await ConditionHasMakerVault.deploy();
     await conditionHasMakerVault.deployed();
     const addresses = {
-        mockCDAI: mockCDAI.address,
-        mockDSR: mockDSR.address,
+        mockCCI: mockCCI.address,
+        mockCMI: mockCMI.address,
         conditionAddress: conditionCompareUints.address,
         conditionHasMakerVault: conditionHasMakerVault.address,
     };
     writeFileSync("addresses.txt", JSON.stringify(addresses));
+});
+
+task(
+    "deployContractsMainNet",
+    `Returns the current gelato gas price used for calling canExec and exec`
+).setAction(async () => {
+    console.log("network : ", await ethers.provider.getNetwork())
+    let userWallet;
+    [userWallet] = await ethers.getSigners();
+    let initialBalance: number = Number(await userWallet.getBalance()) / 1e18
+    console.log('initial balance', initialBalance)
+
+    //CustomCompoundInterface
+    const CustomCompoundInterface = await ethers.getContractFactory("CustomCompoundInterface");
+    const customCompoundInterface = await CustomCompoundInterface.deploy();
+    await customCompoundInterface.deployed();
+    console.log('customCompoundInterface deployed at :', customCompoundInterface.address)
+
+    //CustomMakerInterface
+    const CustomMakerInterface = await ethers.getContractFactory("CustomMakerInterface");
+    const customMakerInterface = await CustomMakerInterface.deploy();
+    await customMakerInterface.deployed();
+    console.log('customMakerInterface deployed at :', customMakerInterface.address)
+
+    //conditionCompareUints
+    const ConditionCompareUintsFromTwoSources = await ethers.getContractFactory(
+        "ConditionCompareUintsFromTwoSources"
+    );
+    const conditionCompareUints = await ConditionCompareUintsFromTwoSources.deploy();
+    await conditionCompareUints.deployed();
+    console.log('conditionCompareUints deployed at :', conditionCompareUints.address)
+
+    //conditionHasMakerVault
+    const ConditionHasMakerVault = await ethers.getContractFactory(
+        "ConditionHasOpenMakerVault"
+    );
+    const conditionHasMakerVault = await ConditionHasMakerVault.deploy();
+    await conditionHasMakerVault.deployed();
+    console.log('conditionHasMakerVault deployed at :', conditionHasMakerVault.address)
+
+    console.log('total cost', initialBalance - Number(await userWallet.getBalance()) / 1e18, " ETH")
+
+    const addresses = {
+        customCompoundInterface: customCompoundInterface.address,
+        customMakerInterface: customMakerInterface.address,
+        conditionAddress: conditionCompareUints.address,
+        conditionHasMakerVault: conditionHasMakerVault.address,
+    };
+    writeFileSync("addresses.txt", JSON.stringify(addresses));
+    return addresses
 });

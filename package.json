@@ -12,7 +12,8 @@
         "compile": "npx buidler compile",
         "test": "npx buidler test",
         "compileJs": "rm -rf dist && tsc",
-        "cleanInstall": "rm -rf node_modules && rm package-lock.json && npm install"
+        "cleanInstall": "rm -rf node_modules && rm package-lock.json && npm install",
+        "ganache": "INFURA_PRIVATE_KEY=$INFURA_PRIVATE_KEY INFURA_ID=$INFURA_ID ganache-cli -f https://:${INFURA_PRIVATE_KEY}@mainnet.infura.io/v3/${INFURA_ID} -s seed"
     },
     "devDependencies": {
         "@nomiclabs/buidler": "^1.4.7",

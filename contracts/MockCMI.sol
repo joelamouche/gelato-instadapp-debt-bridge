@@ -1,9 +1,8 @@
 // "SPDX-License-Identifier: UNLICENSED"
 pragma solidity 0.6.12;
 
-contract MockInstaMakerResolver {
-    //uint256 public borrowRatePerSecond = 1000000000627937192491029810;  // per second==2% annually
-
+// Mock Custom Maker Interface
+contract MockCMI {
     uint256 public borrowRatePerSecond;
     constructor(uint256 _sRPS) public {  borrowRatePerSecond = _sRPS; }
 
@@ -11,5 +10,8 @@ contract MockInstaMakerResolver {
     /// @param _rate CDAI.borrowRatePerBlock but in seconds and 10**27 precision
     function setBorrowRatePerSecond(uint256 _rate) external virtual {
         borrowRatePerSecond = _rate;
+    }
+    function getBorrowRate() public view returns (uint256)  {
+        return borrowRatePerSecond;
     }
 }

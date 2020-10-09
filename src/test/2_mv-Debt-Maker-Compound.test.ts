@@ -53,8 +53,8 @@ describe("Move DAI Debt from Maker to Compound", function () {
 
   // Contracts to deploy and use for local testing
   let dsa;
-  let mockDSR;
-  let mockCDAI;
+  let mockCCI;
+  let mockCMI;
   let conditionCompareUints;
 
   before(async function () {
@@ -129,13 +129,13 @@ describe("Move DAI Debt from Maker to Compound", function () {
     );
 
     // Deploy Mocks for Testing
-    const MockCDAI = await ethers.getContractFactory("MockCDAI");
-    mockCDAI = await MockCDAI.deploy(APY_2_PERCENT_IN_SECONDS);
-    await mockCDAI.deployed();
+    const MockCMI = await ethers.getContractFactory("MockCMI");
+    mockCMI = await MockCMI.deploy(APY_2_PERCENT_IN_SECONDS);
+    await mockCMI.deployed();
 
-    const MockDSR = await ethers.getContractFactory("MockDSR");
-    mockDSR = await MockDSR.deploy(APY_2_PERCENT_IN_SECONDS);
-    await mockDSR.deployed();
+    const MockCCI = await ethers.getContractFactory("MockCCI");
+    mockCCI = await MockCCI.deploy(APY_2_PERCENT_IN_SECONDS);
+    await mockCCI.deployed();
 
     // Deploy Gelato Conditions for Testing
     const ConditionCompareUintsFromTwoSources = await ethers.getContractFactory(
@@ -225,16 +225,16 @@ describe("Move DAI Debt from Maker to Compound", function () {
     const rebalanceCondition = new GelatoCoreLib.Condition({
       inst: conditionCompareUints.address,
       data: await conditionCompareUints.getConditionData(
-        mockCDAI.address, // We are in DSR so we compare against CDAI => SourceA=CDAI
-        mockDSR.address, // SourceB=DSR
+        mockCMI.address, // SourceA=DSR
+        mockCCI.address, // We are in DSR so we compare against Comp <= SourceB=Maker
         await bre.run("abi-encode-with-selector", {
-          abi: require("../../artifacts/MockCDAI.json").abi,
-          functionName: "supplyRatePerSecond",
-        }), // CDAI data feed first (sourceAData)
+          abi: require("../../artifacts/MockCMI.json").abi,
+          functionName: "getBorrowRate",
+        }), // Maker data feed first (sourceAData)
         await bre.run("abi-encode-with-selector", {
-          abi: require("../../artifacts/MockDSR.json").abi,
-          functionName: "dsr",
-        }), // DSR data feed second (sourceBData)
+          abi: require("../../artifacts/MockCCI.json").abi,
+          functionName: "getETHDAIBorrowRatePerSecond",
+        }), // Compound data feed second (sourceBData)
         MIN_SPREAD
       ),
     });
@@ -460,12 +460,12 @@ describe("Move DAI Debt from Maker to Compound", function () {
       taskRefinanceMakerToCompoundIfBetter.selfProviderGasPriceCeil
     );
 
-    // Let's first check if our Task is executable. Since both MockDSR and MockCDAI
+    // Let's first check if our Task is executable. Since both MockCCI and MockCMI
     // start with a normalized per second rate of APY_2_PERCENT_IN_SECONDS
     // (1000000000627937192491029810 in 10**27 precision) in both of them, we
     // expect ConditionNotOk because ANotGreaterOrEqualToBbyMinspread.
     // Check out contracts/ConditionCompareUintsFromTwoSources.sol to see how
-    // how the comparison of MockDSR and MockCDAI is implemented in Condition code.
+    // how the comparison of MockCCI and MockCMI is implemented in Condition code.
     expect(
       await gelatoCore.canExec(
         taskReceipt,
@@ -476,10 +476,10 @@ describe("Move DAI Debt from Maker to Compound", function () {
 
     // We defined a MIN_SPREAD of 10000000 points in the per second rate
     // for our ConditionCompareUintsFromTwoSources. So we now
-    // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+    // set the Maker.borrowRatePerSecond to be 10000000 higher than MockCCI.borrowRatePerSecond
     // and expect it to mean that our Task becomes executable.
-    await mockCDAI.setSupplyRatePerSecond(
-      (await mockDSR.dsr()).add(MIN_SPREAD)
+    await mockCMI.setBorrowRatePerSecond(
+      (await mockCCI.borrowRatePerSecond()).add(MIN_SPREAD)
     );
     expect(
       await gelatoCore.canExec(

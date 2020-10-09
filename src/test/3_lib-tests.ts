@@ -3,16 +3,12 @@ import { BigNumber, Contract } from "ethers";
 
 import { createDSA } from "../lib/createDSA";
 import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
-import { createGelatoOptimizerAave } from "../lib/createGelatoOptimizerAave";
 import { createGelatoAutoLiquidator } from "../lib/createGelatoAutoLiquidator";
 import { createMakerVault } from "../lib/createMakerVault";
 import { AccountInterface } from "../../typechain/AccountInterface";
 import { Ierc20 } from "../../typechain/Ierc20";
 import { constants } from "../constants/constants";
 const GelatoCoreLib = require("@gelatonetwork/core");
-
-import { abiEncodeWithSelector } from "../lib/utils/abiEncodeWithSelector";
-const ConnectAave_ABI = require("../../pre-compiles/ConnectAave_ABI.json");
 
 // => only dependency we need is "chai"
 const { expect } = require("chai");
@@ -121,21 +117,21 @@ describe("Test Lib functions", function () {
     let userAddress: string;
 
     // Contracts
-    let mockCDAI;
-    let mockDSR;
+    let mockCMI;
+    let mockCCI;
     let conditionCompareUints;
     let conditionHasMakerVault;
     let gelatoCore;
 
     beforeEach(async function () {
       // Deploy Mocks for Testing
-      const MockCDAI = await ethers.getContractFactory("MockCDAI");
-      mockCDAI = await MockCDAI.deploy(APY_2_PERCENT_IN_SECONDS);
-      await mockCDAI.deployed();
+      const MockCMI = await ethers.getContractFactory("MockCMI");
+      mockCMI = await MockCMI.deploy(APY_2_PERCENT_IN_SECONDS);
+      await mockCMI.deployed();
 
-      const MockDSR = await ethers.getContractFactory("MockDSR");
-      mockDSR = await MockDSR.deploy(APY_2_PERCENT_IN_SECONDS);
-      await mockDSR.deployed();
+      const MockCCI = await ethers.getContractFactory("MockCCI");
+      mockCCI = await MockCCI.deploy(APY_2_PERCENT_IN_SECONDS);
+      await mockCCI.deployed();
 
       // ===== GELATO SETUP for testing ==================
       gelatoCore = await ethers.getContractAt(
@@ -187,8 +183,8 @@ describe("Test Lib functions", function () {
         dsaAddress,
         ETH_10,
         DAI_150,
-        mockCDAI.address,
-        mockDSR.address,
+        mockCMI.address,
+        mockCCI.address,
         conditionCompareUints.address,
         conditionHasMakerVault.address
       );
@@ -223,22 +219,22 @@ describe("Test Lib functions", function () {
       const gelatoGasPrice = await bre.run("fetchGelatoGasPrice");
       expect(gelatoGasPrice).to.be.lte(GAS_PRICE_CEIL);
 
-      // Let's first check if our Task is executable. Since both MockDSR and MockCDAI
+      // Let's first check if our Task is executable. Since both MockCCI and MockCMI
       // start with a normalized per second rate of APY_2_PERCENT_IN_SECONDS
       // (1000000000627937192491029810 in 10**27 precision) in both of them, we
       // expect ConditionNotOk because ANotGreaterOrEqualToBbyMinspread.
       // Check out contracts/ConditionCompareUintsFromTwoSources.sol to see how
-      // how the comparison of MockDSR and MockCDAI is implemented in Condition code.
+      // how the comparison of MockCCI and MockCMI is implemented in Condition code.
       expect(
         await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
       ).to.be.equal("ConditionNotOk:ANotGreaterOrEqualToBbyMinspread");
 
       // We defined a MIN_SPREAD of 10000000 points in the per second rate
       // for our ConditionCompareUintsFromTwoSources. So we now
-      // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+      // set the Maker.borrowRatePerSecond to be 10000000 higher than MockCCI.borrowRatePerSecond
       // and expect it to mean that our Task becomes executable.
-      await mockCDAI.setSupplyRatePerSecond(
-        (await mockDSR.dsr()).add(MIN_SPREAD)
+      await mockCMI.setBorrowRatePerSecond(
+        (await mockCCI.borrowRatePerSecond()).add(MIN_SPREAD)
       );
 
       expect(
@@ -284,8 +280,8 @@ describe("Test Lib functions", function () {
         dsaAddress,
         ETH_10,
         DAI_150,
-        mockCDAI.address,
-        mockDSR.address,
+        mockCMI.address,
+        mockCCI.address,
         conditionCompareUints.address,
         conditionHasMakerVault.address
       );
@@ -300,10 +296,10 @@ describe("Test Lib functions", function () {
 
       // We defined a MIN_SPREAD of 10000000 points in the per second rate
       // for our ConditionCompareUintsFromTwoSources. So we now
-      // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+      // set the Maker.borrowRatePerSecond to be 10000000 higher than MockCCI.borrowRatePerSecond
       // and expect it to mean that our Task becomes executable.
-      await mockCDAI.setSupplyRatePerSecond(
-        (await mockDSR.dsr()).add(MIN_SPREAD)
+      await mockCMI.setBorrowRatePerSecond(
+        (await mockCCI.borrowRatePerSecond()).add(MIN_SPREAD)
       );
 
       // Check that with 150 DAI, the task is executable
@@ -348,8 +344,8 @@ describe("Test Lib functions", function () {
         dsaAddress,
         ETH_10,
         DAI_150,
-        mockCDAI.address,
-        mockDSR.address,
+        mockCMI.address,
+        mockCCI.address,
         conditionCompareUints.address,
         conditionHasMakerVault.address
       );
@@ -364,10 +360,10 @@ describe("Test Lib functions", function () {
 
       // We defined a MIN_SPREAD of 10000000 points in the per second rate
       // for our ConditionCompareUintsFromTwoSources. So we now
-      // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+      // set the Maker.borrowRatePerSecond to be 10000000 higher than MockCCI.borrowRatePerSecond
       // and expect it to mean that our Task becomes executable.
-      await mockCDAI.setSupplyRatePerSecond(
-        (await mockDSR.dsr()).add(MIN_SPREAD)
+      await mockCMI.setBorrowRatePerSecond(
+        (await mockCCI.borrowRatePerSecond()).add(MIN_SPREAD)
       );
 
       // Check that with an open maker vault, the task is executable
@@ -438,7 +434,7 @@ describe("Test Lib functions", function () {
     let userAddress: string;
 
     // Contracts
-    let mockCDAI;
+    let mockCMI;
     let mockAggregator;
     let conditionCompareUints;
     let conditionHasMakerVault;
@@ -446,9 +442,9 @@ describe("Test Lib functions", function () {
 
     beforeEach(async function () {
       // Deploy Mocks for Testing
-      const MockCDAI = await ethers.getContractFactory("MockCDAI");
-      mockCDAI = await MockCDAI.deploy(APY_2_PERCENT_IN_SECONDS);
-      await mockCDAI.deployed();
+      const MockCMI = await ethers.getContractFactory("MockCMI");
+      mockCMI = await MockCMI.deploy(APY_2_PERCENT_IN_SECONDS);
+      await mockCMI.deployed();
 
       const MockAggregator = await ethers.getContractFactory("MockAggregator");
       mockAggregator = await MockAggregator.deploy(APY_2_PERCENT_IN_SECONDS);
@@ -504,7 +500,7 @@ describe("Test Lib functions", function () {
         dsaAddress,
         ETH_10,
         DAI_150,
-        mockCDAI.address,
+        mockCMI.address,
         mockAggregator.address,
         conditionCompareUints.address,
         conditionHasMakerVault.address
@@ -540,21 +536,21 @@ describe("Test Lib functions", function () {
       const gelatoGasPrice = await bre.run("fetchGelatoGasPrice");
       expect(gelatoGasPrice).to.be.lte(GAS_PRICE_CEIL);
 
-      // Let's first check if our Task is executable. Since both MockDSR and MockCDAI
+      // Let's first check if our Task is executable. Since both MockCCI and MockCMI
       // start with a normalized per second rate of APY_2_PERCENT_IN_SECONDS
       // (1000000000627937192491029810 in 10**27 precision) in both of them, we
       // expect ConditionNotOk because ANotGreaterOrEqualToBbyMinspread.
       // Check out contracts/ConditionCompareUintsFromTwoSources.sol to see how
-      // how the comparison of MockDSR and MockCDAI is implemented in Condition code.
+      // how the comparison of MockCCI and MockCMI is implemented in Condition code.
       expect(
         await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
       ).to.be.equal("ConditionNotOk:ANotGreaterOrEqualToBbyMinspread");
 
       // We defined a MIN_SPREAD of 10000000 points in the per second rate
       // for our ConditionCompareUintsFromTwoSources. So we now
-      // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+      // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockCCI.dsr
       // and expect it to mean that our Task becomes executable.
-      await mockCDAI.setSupplyRatePerSecond(
+      await mockCMI.setBorrowRatePerSecond(
         (await mockAggregator.ethusd()).add(MIN_SPREAD)
       );
 
@@ -596,7 +592,7 @@ describe("Test Lib functions", function () {
         dsaAddress,
         ETH_10,
         DAI_150,
-        mockCDAI.address,
+        mockCMI.address,
         mockAggregator.address,
         conditionCompareUints.address,
         conditionHasMakerVault.address
@@ -612,9 +608,9 @@ describe("Test Lib functions", function () {
 
       // We defined a MIN_SPREAD of 10000000 points in the per second rate
       // for our ConditionCompareUintsFromTwoSources. So we now
-      // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+      // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockCCI.dsr
       // and expect it to mean that our Task becomes executable.
-      await mockCDAI.setSupplyRatePerSecond(
+      await mockCMI.setBorrowRatePerSecond(
         (await mockAggregator.ethusd()).add(MIN_SPREAD)
       );
 
@@ -660,7 +656,7 @@ describe("Test Lib functions", function () {
         dsaAddress,
         ETH_10,
         DAI_150,
-        mockCDAI.address,
+        mockCMI.address,
         mockAggregator.address,
         conditionCompareUints.address,
         conditionHasMakerVault.address
@@ -676,9 +672,9 @@ describe("Test Lib functions", function () {
 
       // We defined a MIN_SPREAD of 10000000 points in the per second rate
       // for our ConditionCompareUintsFromTwoSources. So we now
-      // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+      // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockCCI.dsr
       // and expect it to mean that our Task becomes executable.
-      await mockCDAI.setSupplyRatePerSecond(
+      await mockCMI.setBorrowRatePerSecond(
         (await mockAggregator.ethusd()).add(MIN_SPREAD)
       );
 
@@ -750,21 +746,21 @@ describe("Test Lib functions", function () {
   //   let userAddress: string;
 
   //   // Contracts
-  //   let mockCDAI;
-  //   let mockDSR;
+  //   let mockCMI;
+  //   let mockCCI;
   //   let conditionCompareUints;
   //   let conditionHasMakerVault;
   //   let gelatoCore;
 
   //   beforeEach(async function () {
   //     // Deploy Mocks for Testing
-  //     const MockCDAI = await ethers.getContractFactory("MockCDAI");
-  //     mockCDAI = await MockCDAI.deploy(APY_2_PERCENT_IN_SECONDS);
-  //     await mockCDAI.deployed();
+  //     const MockCMI = await ethers.getContractFactory("MockCMI");
+  //     mockCMI = await MockCMI.deploy(APY_2_PERCENT_IN_SECONDS);
+  //     await mockCMI.deployed();
 
-  //     const MockDSR = await ethers.getContractFactory("MockDSR");
-  //     mockDSR = await MockDSR.deploy(APY_2_PERCENT_IN_SECONDS);
-  //     await mockDSR.deployed();
+  //     const MockCCI = await ethers.getContractFactory("MockCCI");
+  //     mockCCI = await MockCCI.deploy(APY_2_PERCENT_IN_SECONDS);
+  //     await mockCCI.deployed();
 
   //     // ===== GELATO SETUP for testing ==================
   //     gelatoCore = await ethers.getContractAt(
@@ -816,8 +812,8 @@ describe("Test Lib functions", function () {
   //       dsaAddress,
   //       ETH_10,
   //       DAI_150,
-  //       mockCDAI.address,
-  //       mockDSR.address,
+  //       mockCMI.address,
+  //       mockCCI.address,
   //       conditionCompareUints.address,
   //       conditionHasMakerVault.address
   //     );
@@ -852,22 +848,22 @@ describe("Test Lib functions", function () {
   //     const gelatoGasPrice = await bre.run("fetchGelatoGasPrice");
   //     expect(gelatoGasPrice).to.be.lte(GAS_PRICE_CEIL);
 
-  //     // Let's first check if our Task is executable. Since both MockDSR and MockCDAI
+  //     // Let's first check if our Task is executable. Since both MockCCI and MockCMI
   //     // start with a normalized per second rate of APY_2_PERCENT_IN_SECONDS
   //     // (1000000000627937192491029810 in 10**27 precision) in both of them, we
   //     // expect ConditionNotOk because ANotGreaterOrEqualToBbyMinspread.
   //     // Check out contracts/ConditionCompareUintsFromTwoSources.sol to see how
-  //     // how the comparison of MockDSR and MockCDAI is implemented in Condition code.
+  //     // how the comparison of MockCCI and MockCMI is implemented in Condition code.
   //     expect(
   //       await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
   //     ).to.be.equal("ConditionNotOk:ANotGreaterOrEqualToBbyMinspread");
 
   //     // We defined a MIN_SPREAD of 10000000 points in the per second rate
   //     // for our ConditionCompareUintsFromTwoSources. So we now
-  //     // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+  //     // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockCCI.dsr
   //     // and expect it to mean that our Task becomes executable.
-  //     await mockCDAI.setSupplyRatePerSecond(
-  //       (await mockDSR.dsr()).add(MIN_SPREAD)
+  //     await mockCMI.setSupplyRatePerSecond(
+  //       (await mockCCI.dsr()).add(MIN_SPREAD)
   //     );
 
   //     expect(
@@ -938,8 +934,8 @@ describe("Test Lib functions", function () {
   //       dsaAddress,
   //       ETH_10,
   //       DAI_150,
-  //       mockCDAI.address,
-  //       mockDSR.address,
+  //       mockCMI.address,
+  //       mockCCI.address,
   //       conditionCompareUints.address,
   //       conditionHasMakerVault.address
   //     );
@@ -954,10 +950,10 @@ describe("Test Lib functions", function () {
 
   //     // We defined a MIN_SPREAD of 10000000 points in the per second rate
   //     // for our ConditionCompareUintsFromTwoSources. So we now
-  //     // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+  //     // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockCCI.dsr
   //     // and expect it to mean that our Task becomes executable.
-  //     await mockCDAI.setSupplyRatePerSecond(
-  //       (await mockDSR.dsr()).add(MIN_SPREAD)
+  //     await mockCMI.setSupplyRatePerSecond(
+  //       (await mockCCI.dsr()).add(MIN_SPREAD)
   //     );
 
   //     // Check that with 150 DAI, the task is executable
@@ -1002,8 +998,8 @@ describe("Test Lib functions", function () {
   //       dsaAddress,
   //       ETH_10,
   //       DAI_150,
-  //       mockCDAI.address,
-  //       mockDSR.address,
+  //       mockCMI.address,
+  //       mockCCI.address,
   //       conditionCompareUints.address,
   //       conditionHasMakerVault.address
   //     );
@@ -1018,10 +1014,10 @@ describe("Test Lib functions", function () {
 
   //     // We defined a MIN_SPREAD of 10000000 points in the per second rate
   //     // for our ConditionCompareUintsFromTwoSources. So we now
-  //     // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+  //     // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockCCI.dsr
   //     // and expect it to mean that our Task becomes executable.
-  //     await mockCDAI.setSupplyRatePerSecond(
-  //       (await mockDSR.dsr()).add(MIN_SPREAD)
+  //     await mockCMI.setSupplyRatePerSecond(
+  //       (await mockCCI.dsr()).add(MIN_SPREAD)
   //     );
 
   //     // Check that with an open maker vault, the task is executable

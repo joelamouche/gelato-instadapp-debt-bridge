@@ -1,0 +1,59 @@
+{
+  "contractName": "MockCMI",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_sRPS",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "borrowRatePerSecond",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getBorrowRate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_rate",
+          "type": "uint256"
+        }
+      ],
+      "name": "setBorrowRatePerSecond",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b506040516101083803806101088339818101604052602081101561003357600080fd5b505160005560c2806100466000396000f3fe6080604052348015600f57600080fd5b5060043610603c5760003560e01c8063526097501460415780637f0425fa146059578063ba1c5e80146075575b600080fd5b6047607b565b60408051918252519081900360200190f35b607360048036036020811015606d57600080fd5b50356081565b005b60476086565b60005481565b600055565b6000549056fea2646970667358221220521466f505d8ae9d8ed8bb1d3e4a377acaed495cab9934c00fe0adfce7c54ca864736f6c634300060c0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b5060043610603c5760003560e01c8063526097501460415780637f0425fa146059578063ba1c5e80146075575b600080fd5b6047607b565b60408051918252519081900360200190f35b607360048036036020811015606d57600080fd5b50356081565b005b60476086565b60005481565b600055565b6000549056fea2646970667358221220521466f505d8ae9d8ed8bb1d3e4a377acaed495cab9934c00fe0adfce7c54ca864736f6c634300060c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

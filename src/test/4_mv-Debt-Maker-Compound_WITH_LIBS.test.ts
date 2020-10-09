@@ -4,7 +4,6 @@ import { createDSA } from "../lib/createDSA";
 import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
 import { createMakerVault } from "../lib/createMakerVault";
 
-// => only dependency we need is "chai"
 const { expect } = require("chai");
 const bre = require("@nomiclabs/buidler");
 const { ethers } = bre;
@@ -51,8 +50,8 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
 
   // Contracts to deploy and use for local testing
   let dsa;
-  let mockDSR;
-  let mockCDAI;
+  let mockCCI;
+  let mockCMI;
   let conditionCompareUints;
   let conditionHasMakerVault;
 
@@ -98,13 +97,13 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
     );
 
     // Deploy Mocks for Testing
-    const MockCDAI = await ethers.getContractFactory("MockCDAI");
-    mockCDAI = await MockCDAI.deploy(APY_2_PERCENT_IN_SECONDS);
-    await mockCDAI.deployed();
+    const MockCMI = await ethers.getContractFactory("MockCMI");
+    mockCMI = await MockCMI.deploy(APY_2_PERCENT_IN_SECONDS);
+    await mockCMI.deployed();
 
-    const MockDSR = await ethers.getContractFactory("MockDSR");
-    mockDSR = await MockDSR.deploy(APY_2_PERCENT_IN_SECONDS);
-    await mockDSR.deployed();
+    const MockCCI = await ethers.getContractFactory("MockCCI");
+    mockCCI = await MockCCI.deploy(APY_2_PERCENT_IN_SECONDS);
+    await mockCCI.deployed();
 
     // Deploy Gelato Conditions for Testing
     const ConditionCompareUintsFromTwoSources = await ethers.getContractFactory(
@@ -171,8 +170,8 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
       dsa.address,
       ETH_10,
       DAI_150,
-      mockCDAI.address,
-      mockDSR.address,
+      mockCMI.address,
+      mockCCI.address,
       conditionCompareUints.address,
       conditionHasMakerVault.address
     );
@@ -207,22 +206,22 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
     const gelatoGasPrice = await bre.run("fetchGelatoGasPrice");
     expect(gelatoGasPrice).to.be.lte(GAS_PRICE_CEIL);
 
-    // Let's first check if our Task is executable. Since both MockDSR and MockCDAI
+    // Let's first check if our Task is executable. Since both MockCCI and MockCMI
     // start with a normalized per second rate of APY_2_PERCENT_IN_SECONDS
     // (1000000000627937192491029810 in 10**27 precision) in both of them, we
     // expect ConditionNotOk because ANotGreaterOrEqualToBbyMinspread.
     // Check out contracts/ConditionCompareUintsFromTwoSources.sol to see how
-    // how the comparison of MockDSR and MockCDAI is implemented in Condition code.
+    // how the comparison of MockCCI and MockCMI is implemented in Condition code.
     expect(
       await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
     ).to.be.equal("ConditionNotOk:ANotGreaterOrEqualToBbyMinspread");
 
     // We defined a MIN_SPREAD of 10000000 points in the per second rate
     // for our ConditionCompareUintsFromTwoSources. So we now
-    // set the CDAI.supplyRatePerSecond to be 10000000 higher than MockDSR.dsr
+    // set the Maker.borrowRatePerSecond to be 10000000 higher than MockCCI.borrowRatePerSecond
     // and expect it to mean that our Task becomes executable.
-    await mockCDAI.setSupplyRatePerSecond(
-      (await mockDSR.dsr()).add(MIN_SPREAD)
+    await mockCMI.setBorrowRatePerSecond(
+      (await mockCCI.borrowRatePerSecond()).add(MIN_SPREAD)
     );
     expect(
       await gelatoCore.canExec(taskReceipt, GAS_LIMIT, gelatoGasPrice)
