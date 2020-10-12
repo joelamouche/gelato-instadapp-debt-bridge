@@ -26,7 +26,8 @@
         "outDir": "./dist"
     },
     // files:[
-    //   "node_modules/@nomadiclabs/buidler-ethrs/src/type-extensions.d.ts"
+    //   "node_modules/@nomadiclabs/buidler-ethers/src/type-extensions.d.ts"
+    //   "node_modules/buidler-deploy/src/type-extensions.d.ts"
     // ],
     "include": ["src"],
     "exclude": ["node_modules", "src/test"]

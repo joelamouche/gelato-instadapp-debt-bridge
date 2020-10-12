@@ -183,10 +183,7 @@ describe("Test Lib functions", function () {
         dsaAddress,
         ETH_10,
         DAI_150,
-        mockCMI.address,
-        mockCCI.address,
-        conditionCompareUints.address,
-        conditionHasMakerVault.address
+        {CMIAddress:mockCMI.address,CCIAddress:mockCCI.address}
       );
 
       expect(await gelatoCore.isExecutorMinStaked(userAddress)).to.be.true;
@@ -280,10 +277,7 @@ describe("Test Lib functions", function () {
         dsaAddress,
         ETH_10,
         DAI_150,
-        mockCMI.address,
-        mockCCI.address,
-        conditionCompareUints.address,
-        conditionHasMakerVault.address
+        {CMIAddress:mockCMI.address,CCIAddress:mockCCI.address}
       );
 
       // ======= 📣 TASK EXECUTION 📣 =========
@@ -344,10 +338,7 @@ describe("Test Lib functions", function () {
         dsaAddress,
         ETH_10,
         DAI_150,
-        mockCMI.address,
-        mockCCI.address,
-        conditionCompareUints.address,
-        conditionHasMakerVault.address
+        {CMIAddress:mockCMI.address,CCIAddress:mockCCI.address}
       );
 
       // ======= 📣 TASK EXECUTION 📣 =========

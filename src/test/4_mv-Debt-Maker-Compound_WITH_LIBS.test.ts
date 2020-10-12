@@ -170,10 +170,7 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
       dsa.address,
       ETH_10,
       DAI_150,
-      mockCMI.address,
-      mockCCI.address,
-      conditionCompareUints.address,
-      conditionHasMakerVault.address
+      {CMIAddress:mockCMI.address,CCIAddress:mockCCI.address}
     );
 
     expect(await gelatoCore.isExecutorMinStaked(userAddress)).to.be.true;

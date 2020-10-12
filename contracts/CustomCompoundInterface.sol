@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {InstaMakerResolver, InstaMcdAddress,CdpsLike,Helpers} from "./InstaMakerResolver.sol";
 import {SafeMath} from "@gelatonetwork/core/contracts/external/SafeMath.sol";
 
 interface ICToken {

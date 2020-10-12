@@ -23,6 +23,13 @@ const CustomMakerInterface = require("../../artifacts/CustomMakerInterface.json"
 const ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 const ConditionBalance_ABI = require("../../pre-compiles/ConditionBalance_ABI");
 
+interface OptimizerOptions{
+  CMIAddress?: string,
+  CCIAddress?: string,
+  conditionCompareAddress?: string,
+  conditionHasMakerVaultAddress?: string
+}
+
 // requires the user to have an open Maker Vault
 // NB: it requires mock contract addresses for now but will use actual maker and compound deployed contract in next iteration
 
@@ -31,10 +38,7 @@ export async function createGelatoOptimizer(
   dsaAddress: string,
   eth_amount: BigNumber,
   dai_amount: BigNumber,
-  CMIAddress: string,
-  CCIAddress: string,
-  conditionCompareAddress: string,
-  conditionHasMakerVaultAddress: string
+  options?:OptimizerOptions
 ) {
   let gelatoCore; //: IGelatoCore;
   let dsa;
@@ -58,7 +62,7 @@ export async function createGelatoOptimizer(
   );
   dsa = new Contract(dsaAddress, InstaAccount.abi, userWallet);
   conditionCompareUints = new Contract(
-    conditionCompareAddress,
+    options &&options.conditionCompareAddress?options.conditionCompareAddress:constants.ConditionCompareUintsFromTwoSources,
     ConditionCompareUintsFromTwoSources.abi,
     userWallet
   );
@@ -68,7 +72,7 @@ export async function createGelatoOptimizer(
     userWallet
   );
   conditionHasOpenMakerVault = new Contract(
-    conditionHasMakerVaultAddress,
+    options &&options.conditionHasMakerVaultAddress?options.conditionHasMakerVaultAddress:constants.ConditionHasMakerVault,
     ConditionHasOpenMakerVault.abi,
     userWallet
   );
@@ -90,8 +94,8 @@ export async function createGelatoOptimizer(
   const rebalanceCondition = new GelatoCoreLib.Condition({
     inst: conditionCompareUints.address,
     data: await conditionCompareUints.getConditionData(
-      CMIAddress,
-      CCIAddress,
+      options &&options.CMIAddress?options.CMIAddress:constants.CustomMakerInterface,
+      options &&options.CCIAddress?options.CCIAddress:constants.CustomCompoundInterface,
       abiEncodeWithSelector(CustomMakerInterface.abi, "getBorrowRate"),
       abiEncodeWithSelector(CustomCompoundInterface.abi, "getETHDAIBorrowRatePerSecond"),
       MIN_SPREAD

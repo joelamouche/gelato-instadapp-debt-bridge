@@ -213,7 +213,7 @@ task(
     "deployContractsMainNet",
     `Returns the current gelato gas price used for calling canExec and exec`
 ).setAction(async () => {
-    console.log("network : ", await ethers.provider.getNetwork())
+    //console.log("network : ", await ethers.provider.getNetwork())
     let userWallet;
     [userWallet] = await ethers.getSigners();
     let initialBalance: number = Number(await userWallet.getBalance()) / 1e18
