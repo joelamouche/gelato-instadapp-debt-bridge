@@ -1,4 +1,5 @@
 import { createDSA } from "../lib/createDSA";
+import { sendDSA } from "../lib/sendDSA";
 import { createMakerVault } from "../lib/createMakerVault";
 
 // => only dependency we need is "chai"
@@ -64,6 +65,7 @@ describe("Test our condition source contracts", function () {
 
   before(async function () {
     dsaAddress = await createDSA(web3);
+    await sendDSA(web3, dsaAddress,30)
     addresses = await bre.run("deployContractsMainNet")
     console.log('Contracts Deployed !')
   });
