@@ -93,11 +93,14 @@ describe("Test Lib functions", function () {
     let userAddress:string;
     let dai: Ierc20;
 
+    let initialUserDaiBalance:BigNumber;
+
     before(async function () {
       dsaAddress = await createDSA(web3);
       await sendDSAETH(web3, dsaAddress,30);
       [userWallet] = await ethers.getSigners();
       userAddress = await userWallet.getAddress();
+      initialUserDaiBalance=await getDAIBalance(web3,userAddress)
     });
     it("creates a Maker vault with 10ETH", async () => {
       const initialWalletBalance: BigNumber = await userWallet.getBalance();
@@ -134,13 +137,13 @@ describe("Test Lib functions", function () {
         ethers.utils.parseUnits("140", 18)
       );
       expect(await dai.balanceOf(userAddress)).to.eq(
-        ethers.utils.parseUnits("10", 18)
+        initialUserDaiBalance.add(ethers.utils.parseUnits("10", 18))
       );
       expect(await getDAIBalance(web3,dsaAddress)).to.eq(
         ethers.utils.parseUnits("140", 18)
       );
       expect(await getDAIBalance(web3,userAddress)).to.eq(
-        ethers.utils.parseUnits("10", 18)
+        initialUserDaiBalance.add(ethers.utils.parseUnits("10", 18))
       );
     })
     it("sends 10 dai to dsa",async()=>{
@@ -149,13 +152,13 @@ describe("Test Lib functions", function () {
         ethers.utils.parseUnits("150", 18)
       );
       expect(await dai.balanceOf(userAddress)).to.eq(
-        ethers.utils.parseUnits("0", 18)
+        initialUserDaiBalance
       );
       expect(await getDAIBalance(web3,dsaAddress)).to.eq(
         ethers.utils.parseUnits("150", 18)
       );
       expect(await getDAIBalance(web3,userAddress)).to.eq(
-        ethers.utils.parseUnits("0", 18)
+        initialUserDaiBalance
       );
     })
   });
