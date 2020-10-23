@@ -8,6 +8,7 @@ import { sendDSAETH } from "../lib/sendDSAETH";
 import { withdrawDSAETH } from "../lib/withdrawDSAETH";
 import { sendDSADAI } from "../lib/sendDSADAI";
 import { withdrawDSADAI } from "../lib/withdrawDSADAI";
+import { getDAIBalance } from "../lib/getDAIBalance";
 import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
 import { createGelatoAutoLiquidator } from "../lib/createGelatoAutoLiquidator";
 import { createMakerVault } from "../lib/createMakerVault";
@@ -42,7 +43,7 @@ const DAI_150 = ethers.utils.parseUnits("150", 18);
 const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 
 describe("Test Lib functions", function () {
-  describe.only("Test createDSA, sendDSA, withdrawDSA && getDSAAccounts", function () {
+  describe("Test createDSA, sendDSA, withdrawDSA && getDSAAccounts", function () {
     this.timeout(0);
     if (bre.network.name !== "ganache") {
       console.error("Test Suite is meant to be run on ganache only");
@@ -80,7 +81,7 @@ describe("Test Lib functions", function () {
     })
   });
 
-  describe.only("Test createMakerVault && getVaults", function () {
+  describe("Test createMakerVault && getVaults", function () {
     this.timeout(0);
     if (bre.network.name !== "ganache") {
       console.error("Test Suite is meant to be run on ganache only");
@@ -135,6 +136,12 @@ describe("Test Lib functions", function () {
       expect(await dai.balanceOf(userAddress)).to.eq(
         ethers.utils.parseUnits("10", 18)
       );
+      expect(await getDAIBalance(web3,dsaAddress)).to.eq(
+        ethers.utils.parseUnits("140", 18)
+      );
+      expect(await getDAIBalance(web3,userAddress)).to.eq(
+        ethers.utils.parseUnits("10", 18)
+      );
     })
     it("sends 10 dai to dsa",async()=>{
       await sendDSADAI(web3, dsaAddress,10)
@@ -142,6 +149,12 @@ describe("Test Lib functions", function () {
         ethers.utils.parseUnits("150", 18)
       );
       expect(await dai.balanceOf(userAddress)).to.eq(
+        ethers.utils.parseUnits("0", 18)
+      );
+      expect(await getDAIBalance(web3,dsaAddress)).to.eq(
+        ethers.utils.parseUnits("150", 18)
+      );
+      expect(await getDAIBalance(web3,userAddress)).to.eq(
         ethers.utils.parseUnits("0", 18)
       );
     })
