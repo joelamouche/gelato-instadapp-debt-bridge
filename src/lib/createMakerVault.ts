@@ -3,6 +3,7 @@ import DSA from "dsa-sdk";
 import Web3 from "web3";
 import { abiEncodeWithSelector } from "./utils/abiEncodeWithSelector";
 import { constants } from "../constants/constants";
+import { Vaults } from "../customTypes/customTypes";
 
 const ConnectMaker = require("../../pre-compiles/ConnectMaker.json");
 const InstaAccount = require("../../pre-compiles/InstaAccount.json");
@@ -12,7 +13,7 @@ export async function createMakerVault(
   dsaAddress: string,
   eth_amount: BigNumber,
   dai_amount: BigNumber
-) {
+):Promise<Vaults> {
   // setup ethers
   let provider = new ethers.providers.Web3Provider(web3.currentProvider as any);
   let userWallet: ethers.providers.JsonRpcSigner = await provider.getSigner();

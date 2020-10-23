@@ -2,6 +2,9 @@ import { BigNumber, Contract } from "ethers";
 // running `npx buidler test` automatically makes use of buidler-waffle plugin
 
 import { createDSA } from "../lib/createDSA";
+import { getDSAAccounts } from "../lib/getDSAAccounts";
+import { getVaults } from "../lib/getVaults";
+import { sendDSA } from "../lib/sendDSA";
 import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
 import { createGelatoAutoLiquidator } from "../lib/createGelatoAutoLiquidator";
 import { createMakerVault } from "../lib/createMakerVault";
@@ -36,7 +39,7 @@ const DAI_150 = ethers.utils.parseUnits("150", 18);
 const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 
 describe("Test Lib functions", function () {
-  describe("Test createDSA", function () {
+  describe("Test createDSA, sendDSA && getDSAAccounts", function () {
     this.timeout(0);
     if (bre.network.name !== "ganache") {
       console.error("Test Suite is meant to be run on ganache only");
@@ -46,12 +49,15 @@ describe("Test Lib functions", function () {
     let dsaAddress;
 
     it("creates a DSA", async () => {
+      // create DSA
+      let nbAccounts:number=(await getDSAAccounts(web3)).length
       const instaList = await ethers.getContractAt(
         InstaList.abi,
         constants.InstaList
       );
       const dsaIDPrevious = await instaList.accounts();
       dsaAddress = await createDSA(web3);
+      expect((await getDSAAccounts(web3)).length).to.eq(nbAccounts+1)
       const dsaID = dsaIDPrevious.add(1);
       await expect(await instaList.accounts()).to.be.equal(dsaID);
 
@@ -60,10 +66,14 @@ describe("Test Lib functions", function () {
         dsaAddress
       );
       expect(await dsa.version()).to.be.equal(1);
+
+      // send 30 eth to DSA
+      await sendDSA(web3, dsaAddress,30)
+      expect(await web3.eth.getBalance(dsaAddress)).to.eq(ethers.utils.parseEther("30"))
     });
   });
 
-  describe("Test createMakerVault", function () {
+  describe("Test createMakerVault && getVaults", function () {
     this.timeout(0);
     if (bre.network.name !== "ganache") {
       console.error("Test Suite is meant to be run on ganache only");
@@ -76,6 +86,7 @@ describe("Test Lib functions", function () {
 
     before(async function () {
       dsaAddress = await createDSA(web3);
+      await sendDSA(web3, dsaAddress,30);
       [userWallet] = await ethers.getSigners();
     });
     it("creates a Maker vault with 10ETH", async () => {
@@ -83,6 +94,10 @@ describe("Test Lib functions", function () {
 
       // create vault
       let vaults = await createMakerVault(web3, dsaAddress, ETH_10, DAI_150);
+
+      // get vaults
+      let vaults2=await getVaults(web3,dsaAddress)
+      expect(Object.keys(vaults)[0]).to.eq(Object.keys(vaults2)[0])
 
       // Check vault debt and collateral
       let debt, col;
@@ -153,6 +168,7 @@ describe("Test Lib functions", function () {
 
       // Create DSA for user
       dsaAddress = await createDSA(web3);
+      await sendDSA(web3, dsaAddress,30);
       [userWallet] = await ethers.getSigners();
       userAddress = await userWallet.getAddress();
       // deploy Maker vault for user
@@ -461,6 +477,7 @@ describe("Test Lib functions", function () {
 
       // Create DSA for user
       dsaAddress = await createDSA(web3);
+      await sendDSA(web3, dsaAddress,30);
       [userWallet] = await ethers.getSigners();
       userAddress = await userWallet.getAddress();
       // deploy Maker vault for user
