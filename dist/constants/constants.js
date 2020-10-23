@@ -8,7 +8,7 @@ exports.constants = {
     DAI: "0x6b175474e89094c44da98b954eedeac495271d0f",
     DAI_UNISWAP: "0x2a1530C4C41db0B0b2bB646CB5Eb1A67b7158667",
     CDAI: "0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643",
-    CETH: "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5",
+    CETH: "0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5",
     // Conditions
     ConditionBalance: "0xd69DB9852bAbf9e0bd73B8A090382573C7488154",
     // InstaDapp DSA
@@ -28,5 +28,10 @@ exports.constants = {
     InstaCompoundResolver: "0x43a041ee9ac82f4e375a67f67685b750c0c7c9af",
     InstaMakerResolver: "0x0A7008B38E7015F8C36A49eEbc32513ECA8801E5",
     InstaAaveResolver: "0xe04Cd009fF68628BC663058dDAA7E5Bf7979BEaF",
+    // Contracts deployed for this app
+    CustomCompoundInterface: "0x0680a9c5Dc170EdC781D62c6bb08c040feBb4Cee",
+    CustomMakerInterface: "0xc17D394E8aa12EBa82eD02e8A930F3D986C3Ab54",
+    ConditionCompareUintsFromTwoSources: "0x79B1Fb37eABe3a693238c2daD76e585088fB9b74",
+    ConditionHasMakerVault: "0x30644f1ea73C289ecC6F2b3445ABaa9A39112A45"
 };
 //# sourceMappingURL=constants.js.map
