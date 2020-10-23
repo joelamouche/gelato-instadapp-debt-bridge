@@ -52,13 +52,13 @@ var ConnectCompound = require("../../pre-compiles/ConnectCompound.json");
 var ConnectAuth = require("../../pre-compiles/ConnectAuth.json");
 var ConditionCompareUintsFromTwoSources = require("../../artifacts/ConditionCompareUintsFromTwoSources.json");
 var ConditionHasOpenMakerVault = require("../../artifacts/ConditionHasOpenMakerVault.json");
-var MockCDAI = require("../../artifacts/MockCDAI.json");
-var MockDSR = require("../../artifacts/MockDSR.json");
+var CustomCompoundInterface = require("../../artifacts/CustomCompoundInterface.json");
+var CustomMakerInterface = require("../../artifacts/CustomMakerInterface.json");
 var ConnectGelato_ABI = require("../../pre-compiles/ConnectGelato_ABI");
 var ConditionBalance_ABI = require("../../pre-compiles/ConditionBalance_ABI");
 // requires the user to have an open Maker Vault
 // NB: it requires mock contract addresses for now but will use actual maker and compound deployed contract in next iteration
-function createGelatoOptimizer(web3, dsaAddress, eth_amount, dai_amount, mockCDAIAddress, mockDSRAddress, conditionCompareAddress, conditionHasMakerVaultAddress) {
+function createGelatoOptimizer(web3, dsaAddress, eth_amount, dai_amount, options) {
     return __awaiter(this, void 0, void 0, function () {
         var gelatoCore, dsa, conditionCompareUints, conditionBalance, conditionHasOpenMakerVault, provider, userWallet, userAddress, dsaSdk, addAuthData, MIN_SPREAD, rebalanceCondition, _a, _b, _c, enoughDAICondition, _d, _e, _f, hasMakerVaultCondition, _g, _h, _j, spells, connectorPaybackMakerVault, connectorWithdrawFromMakerVault, connectorDepositIntoCompound, connectorBorrowFromCompound, GAS_LIMIT, GAS_PRICE_CEIL, taskRefinanceMakerToCompoundIfBetter, gelatoSelfProvider, _k, _l, _m, TASK_AUTOMATION_FUNDS, expiryDate, taskReceiptId;
         return __generator(this, function (_o) {
@@ -75,9 +75,9 @@ function createGelatoOptimizer(web3, dsaAddress, eth_amount, dai_amount, mockCDA
                     // Instantiate Contracts
                     gelatoCore = new ethers_1.Contract(constants_1.constants.GelatoCore, GelatoCoreLib.GelatoCore.abi, userWallet);
                     dsa = new ethers_1.Contract(dsaAddress, InstaAccount.abi, userWallet);
-                    conditionCompareUints = new ethers_1.Contract(conditionCompareAddress, ConditionCompareUintsFromTwoSources.abi, userWallet);
+                    conditionCompareUints = new ethers_1.Contract(options && options.conditionCompareAddress ? options.conditionCompareAddress : constants_1.constants.ConditionCompareUintsFromTwoSources, ConditionCompareUintsFromTwoSources.abi, userWallet);
                     conditionBalance = new ethers_1.Contract(constants_1.constants.ConditionBalance, ConditionBalance_ABI, userWallet);
-                    conditionHasOpenMakerVault = new ethers_1.Contract(conditionHasMakerVaultAddress, ConditionHasOpenMakerVault.abi, userWallet);
+                    conditionHasOpenMakerVault = new ethers_1.Contract(options && options.conditionHasMakerVaultAddress ? options.conditionHasMakerVaultAddress : constants_1.constants.ConditionHasMakerVault, ConditionHasOpenMakerVault.abi, userWallet);
                     return [4 /*yield*/, dsaSdk.getAuthByAddress(dsaAddress)];
                 case 3:
                     if (!!(_o.sent()).includes(gelatoCore.address)) return [3 /*break*/, 5];
@@ -94,11 +94,7 @@ function createGelatoOptimizer(web3, dsaAddress, eth_amount, dai_amount, mockCDA
                     _c = {
                         inst: conditionCompareUints.address
                     };
-                    return [4 /*yield*/, conditionCompareUints.getConditionData(mockCDAIAddress, // We are in DSR so we compare against CDAI => SourceA=CDAI
-                        mockDSRAddress, // SourceB=DSR
-                        abiEncodeWithSelector_1.abiEncodeWithSelector(MockCDAI.abi, "supplyRatePerSecond"), // CDAI data feed first (sourceAData)
-                        abiEncodeWithSelector_1.abiEncodeWithSelector(MockDSR.abi, "dsr"), // DSR data feed second (sourceBData)
-                        MIN_SPREAD)];
+                    return [4 /*yield*/, conditionCompareUints.getConditionData(options && options.CMIAddress ? options.CMIAddress : constants_1.constants.CustomMakerInterface, options && options.CCIAddress ? options.CCIAddress : constants_1.constants.CustomCompoundInterface, abiEncodeWithSelector_1.abiEncodeWithSelector(CustomMakerInterface.abi, "getBorrowRate"), abiEncodeWithSelector_1.abiEncodeWithSelector(CustomCompoundInterface.abi, "getETHDAIBorrowRatePerSecond"), MIN_SPREAD)];
                 case 6:
                     rebalanceCondition = new (_b.apply(_a, [void 0, (_c.data = _o.sent(),
                             _c)]))();

@@ -35,46 +35,33 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createDSA = void 0;
-var ethers_1 = require("ethers");
-var constants_1 = require("../constants/constants");
-// Contracts
-var InstaIndex = require("../../pre-compiles/InstaIndex.json");
-var InstaList = require("../../pre-compiles/InstaList.json");
-function createDSA(web3) {
+exports.getDSAAccounts = void 0;
+var dsa_sdk_1 = __importDefault(require("dsa-sdk"));
+var getUserAddress_1 = require("./getUserAddress");
+function getDSAAccounts(web3, userAddress) {
     return __awaiter(this, void 0, void 0, function () {
-        var provider, userWallet, userAddress, instaIndex, instaList, dsaIDPrevious, dsaID;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var dsaSdk, _a, _b, _c;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
                 case 0:
-                    provider = new ethers_1.ethers.providers.Web3Provider(web3.currentProvider);
-                    return [4 /*yield*/, provider.getSigner()];
-                case 1:
-                    userWallet = _a.sent();
-                    return [4 /*yield*/, userWallet.getAddress()];
+                    dsaSdk = new dsa_sdk_1.default(web3);
+                    _b = (_a = dsaSdk).getAccounts;
+                    if (!userAddress) return [3 /*break*/, 1];
+                    _c = userAddress;
+                    return [3 /*break*/, 3];
+                case 1: return [4 /*yield*/, getUserAddress_1.getUserAddress(web3)];
                 case 2:
-                    userAddress = _a.sent();
-                    instaIndex = new ethers_1.Contract(
-                    //@ts-ignore
-                    constants_1.constants.InstaIndex, InstaIndex.abi, userWallet);
-                    instaList = new ethers_1.Contract(
-                    //@ts-ignore
-                    constants_1.constants.InstaList, InstaList.abi, userWallet);
-                    return [4 /*yield*/, instaList.accounts()];
-                case 3:
-                    dsaIDPrevious = _a.sent();
-                    return [4 /*yield*/, instaIndex.build(userAddress, 1, userAddress)];
-                case 4:
-                    _a.sent();
-                    dsaID = dsaIDPrevious.add(1);
-                    return [4 /*yield*/, instaList.accountAddr(dsaID)];
-                case 5: 
-                // Instantiate the InstaDapp DSA, returns DSA Address
-                return [2 /*return*/, _a.sent()];
+                    _c = (_d.sent());
+                    _d.label = 3;
+                case 3: return [4 /*yield*/, _b.apply(_a, [_c])];
+                case 4: return [2 /*return*/, _d.sent()];
             }
         });
     });
 }
-exports.createDSA = createDSA;
-//# sourceMappingURL=createDSA.js.map
+exports.getDSAAccounts = getDSAAccounts;
+//# sourceMappingURL=getDSAAccounts.js.map

@@ -20,4 +20,8 @@ export declare const constants: {
     InstaCompoundResolver: string;
     InstaMakerResolver: string;
     InstaAaveResolver: string;
+    CustomCompoundInterface: string;
+    CustomMakerInterface: string;
+    ConditionCompareUintsFromTwoSources: string;
+    ConditionHasMakerVault: string;
 };
