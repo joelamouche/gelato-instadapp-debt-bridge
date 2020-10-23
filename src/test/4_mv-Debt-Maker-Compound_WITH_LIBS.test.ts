@@ -1,7 +1,7 @@
 // running `npx buidler test` automatically makes use of buidler-waffle plugin
 
 import { createDSA } from "../lib/createDSA";
-import { sendDSA } from "../lib/sendDSA";
+import { sendDSAETH } from "../lib/sendDSAETH";
 import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
 import { createMakerVault } from "../lib/createMakerVault";
 
@@ -67,7 +67,7 @@ describe("Move DAI Debt from Maker to Compound WITH LIBS", function () {
     // ===== DSA SETUP ==================
     // Instantiate the InstaDapp DSA
     dsaAddress = await createDSA(web3);
-    await sendDSA(web3, dsaAddress,30)
+    await sendDSAETH(web3, dsaAddress,30)
     dsa = await ethers.getContractAt(InstaAccount.abi, dsaAddress);
 
     // ===== GELATO SETUP ==================
