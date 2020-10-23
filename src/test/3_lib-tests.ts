@@ -4,7 +4,11 @@ import { BigNumber, Contract } from "ethers";
 import { createDSA } from "../lib/createDSA";
 import { getDSAAccounts } from "../lib/getDSAAccounts";
 import { getVaults } from "../lib/getVaults";
-import { sendDSA } from "../lib/sendDSA";
+import { sendDSAETH } from "../lib/sendDSAETH";
+import { withdrawDSAETH } from "../lib/withdrawDSAETH";
+import { sendDSADAI } from "../lib/sendDSADAI";
+import { withdrawDSADAI } from "../lib/withdrawDSADAI";
+import { getDAIBalance } from "../lib/getDAIBalance";
 import { createGelatoOptimizer } from "../lib/createGelatoOptimizer";
 import { createGelatoAutoLiquidator } from "../lib/createGelatoAutoLiquidator";
 import { createMakerVault } from "../lib/createMakerVault";
@@ -39,7 +43,7 @@ const DAI_150 = ethers.utils.parseUnits("150", 18);
 const APY_2_PERCENT_IN_SECONDS = BigNumber.from("1000000000627937192491029810");
 
 describe("Test Lib functions", function () {
-  describe("Test createDSA, sendDSA && getDSAAccounts", function () {
+  describe("Test createDSA, sendDSA, withdrawDSA && getDSAAccounts", function () {
     this.timeout(0);
     if (bre.network.name !== "ganache") {
       console.error("Test Suite is meant to be run on ganache only");
@@ -66,11 +70,15 @@ describe("Test Lib functions", function () {
         dsaAddress
       );
       expect(await dsa.version()).to.be.equal(1);
-
-      // send 30 eth to DSA
-      await sendDSA(web3, dsaAddress,30)
-      expect(await web3.eth.getBalance(dsaAddress)).to.eq(ethers.utils.parseEther("30"))
     });
+    it("sends 40 eth to dsa",async()=>{
+      await sendDSAETH(web3, dsaAddress,40)
+      expect(await web3.eth.getBalance(dsaAddress)).to.eq(ethers.utils.parseEther("40"))
+    })
+    it("withdraws 10 eth from dsa",async()=>{
+      await withdrawDSAETH(web3, dsaAddress,10)
+      expect(await web3.eth.getBalance(dsaAddress)).to.eq(ethers.utils.parseEther("30"))
+    })
   });
 
   describe("Test createMakerVault && getVaults", function () {
@@ -82,12 +90,17 @@ describe("Test Lib functions", function () {
     // Wallet to use for local testing
     let dsaAddress: string;
     let userWallet;
+    let userAddress:string;
     let dai: Ierc20;
+
+    let initialUserDaiBalance:BigNumber;
 
     before(async function () {
       dsaAddress = await createDSA(web3);
-      await sendDSA(web3, dsaAddress,30);
+      await sendDSAETH(web3, dsaAddress,30);
       [userWallet] = await ethers.getSigners();
+      userAddress = await userWallet.getAddress();
+      initialUserDaiBalance=await getDAIBalance(web3,userAddress)
     });
     it("creates a Maker vault with 10ETH", async () => {
       const initialWalletBalance: BigNumber = await userWallet.getBalance();
@@ -118,6 +131,36 @@ describe("Test Lib functions", function () {
         ethers.utils.parseUnits("150", 18)
       );
     });
+    it("withdraws 10 dai from dsa",async()=>{
+      await withdrawDSADAI(web3, dsaAddress,10)
+      expect(await dai.balanceOf(dsaAddress)).to.eq(
+        ethers.utils.parseUnits("140", 18)
+      );
+      expect(await dai.balanceOf(userAddress)).to.eq(
+        initialUserDaiBalance.add(ethers.utils.parseUnits("10", 18))
+      );
+      expect(await getDAIBalance(web3,dsaAddress)).to.eq(
+        ethers.utils.parseUnits("140", 18)
+      );
+      expect(await getDAIBalance(web3,userAddress)).to.eq(
+        initialUserDaiBalance.add(ethers.utils.parseUnits("10", 18))
+      );
+    })
+    it("sends 10 dai to dsa",async()=>{
+      await sendDSADAI(web3, dsaAddress,10)
+      expect(await dai.balanceOf(dsaAddress)).to.eq(
+        ethers.utils.parseUnits("150", 18)
+      );
+      expect(await dai.balanceOf(userAddress)).to.eq(
+        initialUserDaiBalance
+      );
+      expect(await getDAIBalance(web3,dsaAddress)).to.eq(
+        ethers.utils.parseUnits("150", 18)
+      );
+      expect(await getDAIBalance(web3,userAddress)).to.eq(
+        initialUserDaiBalance
+      );
+    })
   });
 
   describe("Test createGelatoOptimizer", function () {
@@ -168,7 +211,7 @@ describe("Test Lib functions", function () {
 
       // Create DSA for user
       dsaAddress = await createDSA(web3);
-      await sendDSA(web3, dsaAddress,30);
+      await sendDSAETH(web3, dsaAddress,30);
       [userWallet] = await ethers.getSigners();
       userAddress = await userWallet.getAddress();
       // deploy Maker vault for user
@@ -477,7 +520,7 @@ describe("Test Lib functions", function () {
 
       // Create DSA for user
       dsaAddress = await createDSA(web3);
-      await sendDSA(web3, dsaAddress,30);
+      await sendDSAETH(web3, dsaAddress,30);
       [userWallet] = await ethers.getSigners();
       userAddress = await userWallet.getAddress();
       // deploy Maker vault for user
